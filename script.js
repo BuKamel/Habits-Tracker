@@ -5,14 +5,14 @@ let currentMonthName = "يوليو";
 let currentDayIndex = 0;
 
 const defaultHabits = [
-    { id: 'fajr', name: 'صلاة الفجر', icon: '🌅', points: 10 },
-    { id: 'duha', name: 'صلاة الضحى', icon: '☀️', points: 5 },
-    { id: 'teeth', name: 'غسيل الأسنان', icon: '🪥', points: 5 },
-    { id: 'dhuhr', name: 'صلاة الظهر', icon: '🕌', points: 10 },
-    { id: 'asr', name: 'صلاة العصر', icon: '🕌', points: 10 },
-    { id: 'maghrib', name: 'صلاة المغرب', icon: '🌅', points: 10 },
-    { id: 'isha', name: 'صلاة العشاء', icon: '🌙', points: 10 },
-    { id: 'quran', name: 'الورد اليومي (قرآن/قراءة)', icon: '📖', points: 15 }
+    { id: 'fajr', name: 'صلاة الفجر', icon: '🌅', scope: 'year' },
+    { id: 'duha', name: 'صلاة الضحى', icon: '☀️', scope: 'year' },
+    { id: 'teeth', name: 'غسيل الأسنان', icon: '🪥', scope: 'year' },
+    { id: 'dhuhr', name: 'صلاة الظهر', icon: '🕌', scope: 'year' },
+    { id: 'asr', name: 'صلاة العصر', icon: '🕌', scope: 'year' },
+    { id: 'maghrib', name: 'صلاة المغرب', icon: '🌅', scope: 'year' },
+    { id: 'isha', name: 'صلاة العشاء', icon: '🌙', scope: 'year' },
+    { id: 'quran', name: 'الورد اليومي (قرآن/قراءة)', icon: '📖', scope: 'year' }
 ];
 
 let availableYears = JSON.parse(localStorage.getItem('bu_kamel_years')) || [2023, 2024, 2025, 2026];
@@ -84,6 +84,9 @@ window.addEventListener('DOMContentLoaded', () => {
         const found = db.users.find(u => u.username === activeSession);
         if (found) {
             currentUser = found;
+            if (!currentUser.customHabits) {
+                currentUser.customHabits = JSON.parse(JSON.stringify(defaultHabits));
+            }
             initAppDashboard();
         }
     }
@@ -114,7 +117,6 @@ function handleRegister() {
         return;
     }
 
-    // فحص تشابه اسم المستخدم مع قاعدة البيانات
     const existingUser = db.users.find(u => u.username.toLowerCase() === username.toLowerCase());
     if (existingUser) {
         alert('⚠️ عذراً، اسم المستخدم هذا موجود مسبقاً! الرجاء اختيار اسم آخر.');
@@ -124,7 +126,8 @@ function handleRegister() {
     const newUser = {
         username: username,
         pass: pass1,
-        data: {}
+        data: {},
+        customHabits: JSON.parse(JSON.stringify(defaultHabits))
     };
 
     db.users.push(newUser);
@@ -144,6 +147,9 @@ function handleLogin() {
     }
 
     currentUser = user;
+    if (!currentUser.customHabits) {
+        currentUser.customHabits = JSON.parse(JSON.stringify(defaultHabits));
+    }
     localStorage.setItem('bu_kamel_active_user', user.username);
     initAppDashboard();
 }
@@ -164,7 +170,107 @@ function initAppDashboard() {
 
     renderYearsList();
     renderMonthsGrid();
+    renderAdminHabitsList();
     updateDashboardPerformance();
+}
+
+function handleScopeChange(val) {
+    const monthWrap = document.getElementById('scopeMonthWrapper');
+    const quarterWrap = document.getElementById('scopeQuarterWrapper');
+    
+    monthWrap.classList.add('hidden');
+    quarterWrap.classList.add('hidden');
+
+    if (val === 'month') {
+        monthWrap.classList.remove('hidden');
+    } else if (val === 'quarter') {
+        quarterWrap.classList.remove('hidden');
+    }
+}
+
+function addNewCustomHabit() {
+    const name = document.getElementById('newHabitName').value.trim();
+    let icon = document.getElementById('newHabitIcon').value.trim() || '⭐';
+    const scopeType = document.getElementById('habitScopeType').value;
+
+    if (!name) {
+        alert('الرجاء كتابة اسم العادة!');
+        return;
+    }
+
+    let scopeVal = 'year';
+    if (scopeType === 'month') {
+        scopeVal = `month_${document.getElementById('habitTargetMonth').value}`;
+    } else if (scopeType === 'quarter') {
+        scopeVal = document.getElementById('habitTargetQuarter').value;
+    }
+
+    const newId = 'habit_' + Date.now();
+    currentUser.customHabits.push({
+        id: newId,
+        name: name,
+        icon: icon,
+        scope: scopeVal
+    });
+
+    saveDatabase();
+    document.getElementById('newHabitName').value = '';
+    document.getElementById('newHabitIcon').value = '';
+    renderAdminHabitsList();
+    alert('تمت إضافة العادة بنجاح! 🎉');
+}
+
+function deleteHabit(habitId) {
+    if (confirm('هل أنت متأكد من حذف هذه العادة نهائياً؟')) {
+        currentUser.customHabits = currentUser.customHabits.filter(h => h.id !== habitId);
+        saveDatabase();
+        renderAdminHabitsList();
+        updateDashboardPerformance();
+    }
+}
+
+function renderAdminHabitsList() {
+    const container = document.getElementById('currentHabitsListAdmin');
+    if (!container) return;
+    container.innerHTML = '';
+
+    currentUser.customHabits.forEach(habit => {
+        let scopeDesc = 'طوال السنة';
+        if (habit.scope.startsWith('month_')) {
+            const mIdx = parseInt(habit.scope.split('_')[1]);
+            const mNames = ["يناير", "فبراير", "مارس", "إبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+            scopeDesc = `شهر ${mNames[mIdx]}`;
+        } else if (['Q1', 'Q2', 'Q3', 'Q4'].includes(habit.scope)) {
+            scopeDesc = `ربع سنة ${habit.scope}`;
+        }
+
+        const row = document.createElement('div');
+        row.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-glass); font-size: 0.9rem;";
+        row.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span>${habit.icon}</span>
+                <strong>${habit.name}</strong>
+                <span style="font-size: 0.75rem; color: var(--text-muted); background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px;">(${scopeDesc})</span>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="deleteHabit('${habit.id}')" style="padding: 4px 10px; font-size: 0.8rem;">🗑 حذف</button>
+        `;
+        container.appendChild(row);
+    });
+}
+
+function getActiveHabitsForCurrentMonth() {
+    return currentUser.customHabits.filter(habit => {
+        if (habit.scope === 'year') return true;
+        if (habit.scope.startsWith('month_')) {
+            const mIdx = parseInt(habit.scope.split('_')[1]);
+            return mIdx === currentMonth;
+        }
+        if (['Q1', 'Q2', 'Q3', 'Q4'].includes(habit.scope)) {
+            const qMap = { 'Q1': [0, 1, 2], 'Q2': [3, 4, 5], 'Q3': [6, 7, 8], 'Q4': [9, 10, 11] };
+            return qMap[habit.scope].includes(currentMonth);
+        }
+        return true;
+    });
 }
 
 function renderYearsList() {
@@ -191,7 +297,7 @@ function addNewYear() {
     const nextExpectedYear = Math.max(...availableYears) + 1;
 
     if (actualCurrentYear < nextExpectedYear) {
-        alert(`عذراً يا بطل! لا يمكنك إضافة سنة ${nextExpectedYear} لأننا ما زلنا في عام ${actualCurrentYear}. سيتم فتح إمكانية إضافتها تلقائياً بمجرد حلول عام ${nextExpectedYear}!`);
+        alert(`عذراً يا بطل! لا يمكنك إضافة سنة ${nextExpectedYear} لأننا ما زلنا في عام ${actualCurrentYear}.`);
         return;
     }
 
@@ -286,7 +392,13 @@ function renderDayHabits() {
     const container = document.getElementById('habitsListContainer');
     container.innerHTML = '';
 
-    defaultHabits.forEach(habit => {
+    const activeHabits = getActiveHabitsForCurrentMonth();
+    if (activeHabits.length === 0) {
+        container.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 20px;">لا توجد عادات مخصصة لهذا الشهر. أضف عادات جديدة من لوحة التحكم الرئيسية!</p>`;
+        return;
+    }
+
+    activeHabits.forEach(habit => {
         const key = `${currentYear}_${currentMonth}_${currentDayIndex}_${habit.id}`;
         const currentStatus = currentUser.data[key] || 'none';
 
@@ -328,17 +440,19 @@ function goHome() {
     document.getElementById('fullMonthView').classList.add('hidden');
     document.getElementById('evaluationView').classList.add('hidden');
     document.getElementById('mainDashboardView').classList.remove('hidden');
+    renderAdminHabitsList();
     updateDashboardPerformance();
 }
 
 function updateDashboardPerformance() {
     if (!currentUser) return;
     const daysCount = new Date(currentYear, currentMonth + 1, 0).getDate();
-    let totalPossible = daysCount * defaultHabits.length;
+    const activeHabits = getActiveHabitsForCurrentMonth();
+    let totalPossible = daysCount * activeHabits.length;
     let earnedPoints = 0;
 
     for (let d = 0; d < daysCount; d++) {
-        defaultHabits.forEach(habit => {
+        activeHabits.forEach(habit => {
             const key = `${currentYear}_${currentMonth}_${d}_${habit.id}`;
             const status = currentUser.data[key];
             if (status === 'done') earnedPoints += 1;
@@ -361,6 +475,7 @@ function openFullMonthView() {
     const container = document.getElementById('fullMonthContentContainer');
     container.innerHTML = '';
 
+    const activeHabits = getActiveHabitsForCurrentMonth();
     const daysCount = new Date(currentYear, currentMonth + 1, 0).getDate();
     for (let d = 0; d < daysCount; d++) {
         const dayBox = document.createElement('div');
@@ -369,7 +484,7 @@ function openFullMonthView() {
 
         let html = `<div style="font-weight: 700; margin-bottom: 10px; color: var(--accent-color);">📅 اليوم رقم ${d + 1}</div><div style="display: flex; flex-direction: column; gap: 8px;">`;
 
-        defaultHabits.forEach(habit => {
+        activeHabits.forEach(habit => {
             const key = `${currentYear}_${currentMonth}_${d}_${habit.id}`;
             const status = currentUser.data[key] || 'none';
             html += `
@@ -413,10 +528,24 @@ function openQuarterEvaluation(title, monthsArray) {
     monthsArray.forEach(mIdx => {
         const mAdjusted = mIdx - 1;
         const daysCount = new Date(currentYear, mAdjusted + 1, 0).getDate();
-        totalPossible += daysCount * defaultHabits.length;
+        
+        // حساب العادات الخاصة بهذا الشهر بدقة
+        const monthActiveHabits = currentUser.customHabits.filter(habit => {
+            if (habit.scope === 'year') return true;
+            if (habit.scope.startsWith('month_')) {
+                return parseInt(habit.scope.split('_')[1]) === mAdjusted;
+            }
+            if (['Q1', 'Q2', 'Q3', 'Q4'].includes(habit.scope)) {
+                const qMap = { 'Q1': [0, 1, 2], 'Q2': [3, 4, 5], 'Q3': [6, 7, 8], 'Q4': [9, 10, 11] };
+                return qMap[habit.scope].includes(mAdjusted);
+            }
+            return true;
+        });
+
+        totalPossible += daysCount * monthActiveHabits.length;
 
         for (let d = 0; d < daysCount; d++) {
-            defaultHabits.forEach(habit => {
+            monthActiveHabits.forEach(habit => {
                 const key = `${currentYear}_${mAdjusted}_${d}_${habit.id}`;
                 const status = currentUser.data[key];
                 if (status === 'done') earnedPoints += 1;
@@ -438,15 +567,27 @@ function openAnnualEvaluation() {
     document.getElementById('evalHeaderTitle').textContent = "التقييم السنوي الشامل";
     document.getElementById('evalTitleBox').textContent = `التقرير السنوي الشامل لعام ${currentYear}`;
 
-    const isLeap = (currentYear % 4 === 0 && currentYear % 100 !== 0) || (currentYear % 400 === 0);
-    const totalDays = isLeap ? 366 : 365;
-    const totalPossible = totalDays * defaultHabits.length;
+    let totalPossible = 0;
     let earnedPoints = 0;
 
     for (let m = 0; m < 12; m++) {
         const daysCount = new Date(currentYear, m + 1, 0).getDate();
+        const monthActiveHabits = currentUser.customHabits.filter(habit => {
+            if (habit.scope === 'year') return true;
+            if (habit.scope.startsWith('month_')) {
+                return parseInt(habit.scope.split('_')[1]) === m;
+            }
+            if (['Q1', 'Q2', 'Q3', 'Q4'].includes(habit.scope)) {
+                const qMap = { 'Q1': [0, 1, 2], 'Q2': [3, 4, 5], 'Q3': [6, 7, 8], 'Q4': [9, 10, 11] };
+                return qMap[habit.scope].includes(m);
+            }
+            return true;
+        });
+
+        totalPossible += daysCount * monthActiveHabits.length;
+
         for (let d = 0; d < daysCount; d++) {
-            defaultHabits.forEach(habit => {
+            monthActiveHabits.forEach(habit => {
                 const key = `${currentYear}_${m}_${d}_${habit.id}`;
                 const status = currentUser.data[key];
                 if (status === 'done') earnedPoints += 1;
@@ -455,7 +596,7 @@ function openAnnualEvaluation() {
         }
     }
 
-    const ratio = Math.round((earnedPoints / totalPossible) * 100);
+    const ratio = totalPossible > 0 ? Math.round((earnedPoints / totalPossible) * 100) : 0;
     document.getElementById('evalContentBox').innerHTML = `متوسط إنجازك العام طوال عام ${currentYear} هو: <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>\n\nالالتزام بالخطوات الصغيرة يومياً يصنع إنجازات وتغييرات جذرية على المدى الطويل!`;
 }
 

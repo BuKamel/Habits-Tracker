@@ -87,6 +87,54 @@
                     </div>
                 </div>
 
+                <!-- قسم إدارة العادات (إضافة وحذف) -->
+                <div class="card" style="margin-top: 20px;">
+                    <h3>⚙️ إدارة عاداتك اليومية</h3>
+                    <p class="card-subtitle">أضف عادة جديدة وحدد نطاقها الزمني (شهر، ربع سنة، أو سنة كاملة):</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                        <input type="text" id="newHabitName" class="input-field" placeholder="اسم العادة (مثال: قراءة كتاب)">
+                        
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="newHabitIcon" class="input-field" placeholder="أيقونة تعبيرية (مثال: 📚)" style="width: 150px;">
+                            <select id="habitScopeType" class="status-select" onchange="handleScopeChange(this.value)">
+                                <option value="year">📅 طوال السنة</option>
+                                <option value="quarter">📈 ربع سنة محدّد</option>
+                                <option value="month">📆 شهر محدّد</option>
+                            </select>
+                        </div>
+
+                        <!-- قائمة منسدلة للشهور (تظهر عند اختيار شهر) -->
+                        <div id="scopeMonthWrapper" class="hidden">
+                            <label style="font-size: 0.85rem; font-weight: 600;">اختر الشهر:</label>
+                            <select id="habitTargetMonth" class="status-select">
+                                <option value="0">يناير</option><option value="1">فبراير</option><option value="2">مارس</option>
+                                <option value="3">إبريل</option><option value="4">مايو</option><option value="5">يونيو</option>
+                                <option value="6">يوليو</option><option value="7">أغسطس</option><option value="8">سبتمبر</option>
+                                <option value="9">أكتوبر</option><option value="10">نوفمبر</option><option value="11">ديسمبر</option>
+                            </select>
+                        </div>
+
+                        <!-- قائمة منسدلة لأرباع السنة (تظهر عند اختيار ربع) -->
+                        <div id="scopeQuarterWrapper" class="hidden">
+                            <label style="font-size: 0.85rem; font-weight: 600;">اختر ربع السنة:</label>
+                            <select id="habitTargetQuarter" class="status-select">
+                                <option value="Q1">Q1 (الربع الأول: يناير - مارس)</option>
+                                <option value="Q2">Q2 (الربع الثاني: إبريل - يونيو)</option>
+                                <option value="Q3">Q3 (الربع الثالث: يوليو - سبتمبر)</option>
+                                <option value="Q4">Q4 (الربع الرابع: أكتوبر - ديسمبر)</option>
+                            </select>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="addNewCustomHabit()">➕ إضافة العادة للقائمة</button>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <h4 style="margin-bottom: 10px;">📋 العادات النشطة الحالية:</h4>
+                        <div id="currentHabitsListAdmin" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                    </div>
+                </div>
+
                 <div class="section-block">
                     <h3>📈 الأرباع والتقييمات السنوية:</h3>
                     <div class="grid-options">
