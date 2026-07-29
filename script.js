@@ -245,12 +245,12 @@ function renderAdminHabitsList() {
         }
 
         const row = document.createElement('div');
-        row.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-glass); font-size: 0.9rem;";
+        row.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-glass); font-size: 0.9rem;";
         row.innerHTML = `
             <div style="display: flex; align-items: center; gap: 8px;">
                 <span>${habit.icon}</span>
                 <strong>${habit.name}</strong>
-                <span style="font-size: 0.75rem; color: var(--text-muted); background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px;">(${scopeDesc})</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); background: var(--bg-card); padding: 2px 6px; border-radius: 4px;">(${scopeDesc})</span>
             </div>
             <button class="btn btn-danger btn-sm" onclick="deleteHabit('${habit.id}')" style="padding: 4px 10px; font-size: 0.8rem;">🗑 حذف</button>
         `;
@@ -529,7 +529,6 @@ function openQuarterEvaluation(title, monthsArray) {
         const mAdjusted = mIdx - 1;
         const daysCount = new Date(currentYear, mAdjusted + 1, 0).getDate();
         
-        // حساب العادات الخاصة بهذا الشهر بدقة
         const monthActiveHabits = currentUser.customHabits.filter(habit => {
             if (habit.scope === 'year') return true;
             if (habit.scope.startsWith('month_')) {
@@ -600,7 +599,28 @@ function openAnnualEvaluation() {
     document.getElementById('evalContentBox').innerHTML = `متوسط إنجازك العام طوال عام ${currentYear} هو: <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>\n\nالالتزام بالخطوات الصغيرة يومياً يصنع إنجازات وتغييرات جذرية على المدى الطويل!`;
 }
 
+// زر تقرير وإغلاق الشهر الفعلي
 function closeMonthReport() {
-    alert(`تم إصدار تقرير وإغلاق شهر ${currentMonthName} بنجاح!`);
-    goHome();
+    document.getElementById('monthView').classList.add('hidden');
+    document.getElementById('evaluationView').classList.remove('hidden');
+    
+    document.getElementById('evalHeaderTitle').textContent = `تقرير شهر ${currentMonthName}`;
+    document.getElementById('evalTitleBox').textContent = `تقرير وتقييم أداء شهر ${currentMonthName} (${currentYear})`;
+
+    const daysCount = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const activeHabits = getActiveHabitsForCurrentMonth();
+    let totalPossible = daysCount * activeHabits.length;
+    let earnedPoints = 0;
+
+    for (let d = 0; d < daysCount; d++) {
+        activeHabits.forEach(habit => {
+            const key = `${currentYear}_${currentMonth}_${d}_${habit.id}`;
+            const status = currentUser.data[key];
+            if (status === 'done') earnedPoints += 1;
+            else if (status === 'super') earnedPoints += 1.25;
+        });
+    }
+
+    const ratio = totalPossible > 0 ? Math.round((earnedPoints / totalPossible) * 100) : 0;
+    document.getElementById('evalContentBox').innerHTML = `لقد أنهيت تتبع عادات شهر <strong>${currentMonthName}</strong> بنجاح!\n\nنسبة إنجازك الكلية لهذا الشهر هي: <span style="color: var(--success-color); font-size: 1.6rem; font-weight: 900;">${ratio}%</span>\n\nشكراً لالتزامك، تذكر أن الاستمرارية هي مفتاح التفوق والنجاح الدائم! 🚀`;
 }
