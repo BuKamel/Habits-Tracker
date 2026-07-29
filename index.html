@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="htmlRoot">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة متتبع العادات - Bu Kamel</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- الشريط العلوي الرئيسي -->
+    <header class="header-bar">
+        <div class="brand-title">
+            <span>☕</span> <strong>منصة Bu Kamel</strong>
+        </div>
+        <div class="header-controls">
+            <!-- أداة الترجمة الفورية -->
+            <div id="google_translate_element"></div>
+            <!-- زر تبديل الوضع المظلم/الفاتح -->
+            <button class="theme-toggle-btn" onclick="toggleTheme()" title="تغيير المظهر">🌙</button>
+            <!-- معلومات المستخدم وزر الرئيسية الثابت -->
+            <div id="userHeaderInfo" class="hidden" style="display: flex; align-items: center; gap: 8px;">
+                <button class="btn btn-primary btn-sm" onclick="goHome()">🏠 الرئيسية</button>
+                <span id="headerUsername"></span>
+                <button class="btn btn-secondary btn-sm" onclick="logout()">خروج</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- شريط قناة اليوتيوب الرسمية -->
+    <div class="channel-bar">
+        <span>🎬 قناة يوتيوب الرسمية: <strong>Bu Kamel R2A</strong></span>
+        <span>🔗 رابط القناة: <a href="https://www.youtube.com/@BuKamel-R2A" target="_blank">youtube.com/@BuKamel-R2A</a></span>
+    </div>
+
+    <!-- شريط العبارات التحفيزية الديناميكية -->
+    <div class="motivation-banner" id="motivationBannerText">
+        🌟 "النجاح ليس تصادُفاً، بل هو ثمرة الاجتهاد المستمر وتنظيم العادات اليومية."
+    </div>
+
+    <!-- قسم تسجيل الدخول وإنشاء الحساب -->
+    <div id="loginViewContainer" class="auth-wrapper">
+        <div id="loginView" class="auth-box">
+            <h2>تسجيل الدخول للنظام</h2>
+            <p class="auth-subtitle">أدخل بيانات حسابك للمتابعة:</p>
+            <input type="text" id="loginUser" class="input-field" placeholder="اسم المستخدم">
+            <input type="password" id="loginPass" class="input-field" placeholder="كلمة المرور">
+            <button class="btn btn-primary full-width" onclick="handleLogin()">تسجيل الدخول</button>
+            <p class="auth-switch-text">ليس لديك حساب؟ <a href="#" onclick="switchAuthView('register')">إنشاء حساب جديد</a></p>
+        </div>
+
+        <div id="registerView" class="auth-box hidden">
+            <h2>إنشاء حساب جديد</h2>
+            <p class="auth-subtitle">اختر اسم مستخدم فريد وكلمة مرور:</p>
+            <input type="text" id="regUser" class="input-field" placeholder="اسم المستخدم (Username)">
+            <input type="password" id="regPass1" class="input-field" placeholder="كلمة المرور">
+            <input type="password" id="regPass2" class="input-field" placeholder="تأكيد كلمة المرور">
+            <button class="btn btn-primary full-width" onclick="handleRegister()">إتمام التسجيل وإنشاء الحساب</button>
+            <p class="auth-switch-text"><a href="#" onclick="switchAuthView('login')">العودة لتسجيل الدخول</a></p>
+        </div>
+    </div>
+
+    <!-- الهيكل الرئيسي للتطبيق -->
+    <div id="mainAppLayout" class="main-layout hidden">
+        
+        <!-- القائمة الجانبية -->
+        <aside class="sidebar-years">
+            <h3>📂 سجل السنوات</h3>
+            <p class="sidebar-desc">اختر السنة لعرض سجلاتها:</p>
+            <div class="years-list" id="sidebarYearsList"></div>
+            <button class="btn btn-primary btn-sm" onclick="addNewYear()" style="margin-top: 10px;">➕ إضافة السنة الجديدة</button>
+        </aside>
+
+        <!-- منطقة المحتوى الرئيسية -->
+        <main class="content-area">
+            
+            <!-- لوحة التحكم الرئيسية -->
+            <div id="mainDashboardView">
+                <h2>لوحة التحكم والبيانات الفعلية</h2>
+                
+                <div class="dashboard-grid" style="grid-template-columns: 1fr;">
+                    <div class="card">
+                        <h3>📊 تقييم الأداء (الشهر الفعلي)</h3>
+                        <p class="card-subtitle">بناءً على الشهر النشط حالياً:</p>
+                        <div class="performance-score" id="actualPerformanceDisplay">0%</div>
+                    </div>
+                </div>
+
+                <div class="section-block">
+                    <h3>📈 الأرباع والتقييمات السنوية:</h3>
+                    <div class="grid-options">
+                        <button class="option-btn" onclick="openQuarterEvaluation('الربع الأول Q1', [1,2,3])">Q1 (الربع الأول)</button>
+                        <button class="option-btn" onclick="openQuarterEvaluation('الربع الثاني Q2', [4,5,6])">Q2 (الربع الثاني)</button>
+                        <button class="option-btn" onclick="openQuarterEvaluation('الربع الثالث Q3', [7,8,9])">Q3 (الربع الثالث)</button>
+                        <button class="option-btn" onclick="openQuarterEvaluation('الربع الرابع Q4', [10,11,12])">Q4 (الربع الرابع)</button>
+                        <button class="option-btn highlight-btn" onclick="openAnnualEvaluation()">⭐ التقييم السنوي الشامل</button>
+                    </div>
+                </div>
+
+                <div class="section-block">
+                    <h3>📅 شهور السنة للتتبع الفعلي:</h3>
+                    <div class="grid-options" id="monthsGrid"></div>
+                </div>
+            </div>
+
+            <!-- عرض الشهر اليومي -->
+            <div id="monthView" class="hidden">
+                <div class="nav-header">
+                    <div>
+                        <button class="btn btn-secondary" onclick="goHome()">⬅ عودة للرئيسية</button>
+                        <span id="activeMonthTitle" class="nav-title"></span>
+                    </div>
+                    <div class="nav-actions">
+                        <button class="btn btn-success" onclick="openFullMonthView()">📂 تعديل الشهر كامل</button>
+                        <button class="btn btn-danger" onclick="closeMonthReport()">🏁 تقرير وإغلاق الشهر</button>
+                    </div>
+                </div>
+
+                <div class="card jump-card">
+                    <span class="jump-label">🎯 الانتقال السريع لليوم:</span>
+                    <select id="quickDayDropdown" class="status-select" onchange="jumpToSelectedDay(this.value)">
+                        <option value="" disabled selected>-- اختر اليوم --</option>
+                    </select>
+                </div>
+
+                <div class="day-card">
+                    <div class="day-nav-header">
+                        <button class="btn btn-primary" onclick="changeDay(-1)">▶ اليوم السابق</button>
+                        <h3 id="activeDayTitle"></h3>
+                        <button class="btn btn-primary" onclick="changeDay(1)">اليوم التالي ◀</button>
+                    </div>
+                    <div id="habitsListContainer"></div>
+                </div>
+            </div>
+
+            <!-- عرض الشهر بالكامل -->
+            <div id="fullMonthView" class="hidden">
+                <div class="nav-header">
+                    <div>
+                        <button class="btn btn-secondary" onclick="openMonth(currentMonth, currentMonthName)">⬅ العودة للتتبع اليومي</button>
+                        <span id="fullMonthHeaderTitle" class="nav-title"></span>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>📋 عرض وتعديل الشهر كاملاً</h3>
+                    <p class="card-subtitle">تعديل أي عادة لأي يوم يتم حفظه فوراً:</p>
+                    <div id="fullMonthContentContainer" class="full-month-scroll"></div>
+                </div>
+            </div>
+
+            <!-- عرض التقييمات والتقارير -->
+            <div id="evaluationView" class="hidden">
+                <div class="nav-header">
+                    <div>
+                        <button class="btn btn-secondary" onclick="goHome()">⬅ عودة للرئيسية</button>
+                        <span id="evalHeaderTitle" class="nav-title"></span>
+                    </div>
+                </div>
+                <div class="card eval-card">
+                    <h3 id="evalTitleBox">تقرير الأداء</h3>
+                    <p id="evalContentBox" class="eval-content"></p>
+                    <button class="btn btn-primary" onclick="goHome()">إغلاق التقرير</button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'ar',
+                includedLanguages: 'ar,en,fr,es,de,it,tr,ur,hi,zh-CN,ja,ru',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <script src="script.js"></script>
+</body>
+</html>
