@@ -1,9 +1,9 @@
 :root {
-    --bg-main: #f5f2eb; /* خلفية قهوة فاتحة دافئة */
-    --bg-card: rgba(255, 253, 250, 0.75); /* زجاج ضبابي شفاف ناعم للوضع النهاري */
+    --bg-main: #f5f2eb;
+    --bg-card: rgba(255, 253, 250, 0.75);
     --text-main: #3e2723; 
     --text-muted: #795548;
-    --accent-color: #6f4e37; /* لون القهوة الكلاسيكي */
+    --accent-color: #6f4e37;
     --accent-hover: #5c4033;
     --success-color: #33691e;
     --danger-color: #b71c1c;
@@ -11,8 +11,8 @@
 }
 
 [data-theme="dark"] {
-    --bg-main: #1d1715; /* بني غامق دافئ وليس أسود */
-    --bg-card: rgba(43, 34, 31, 0.75); /* زجاج ضبابي داكن فاخر */
+    --bg-main: #1d1715;
+    --bg-card: rgba(43, 34, 31, 0.75);
     --text-main: #f5efe6;
     --text-muted: #bcaaa4;
     --accent-color: #8d5b4c;
@@ -43,19 +43,20 @@ body {
     display: none !important;
 }
 
-/* الشريط العلوي بزجاج ضبابي */
+/* الشريط العلوي بزجاج ضبابي في أعلى الصفحة تماماً */
 .header-bar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
     background: var(--bg-card);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    padding: 12px 20px;
+    padding: 10px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid var(--border-glass);
     box-shadow: 0 4px 20px rgba(62, 39, 35, 0.04);
-    flex-wrap: wrap;
-    gap: 10px;
 }
 
 .brand-title {
@@ -70,8 +71,94 @@ body {
 .header-controls {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     flex-wrap: wrap;
+}
+
+/* قائمة وبحث الترجمة الزجاجية في أعلى الصفحة */
+.google-translate-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.custom-translate-btn {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-glass);
+    color: var(--text-main);
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.custom-translate-btn:hover {
+    border-color: var(--accent-color);
+    background: rgba(111, 78, 55, 0.08);
+}
+
+/* القائمة المنسدلة للبحث تفتح للأسفل بوضوح وثبات لأن الشريط بالأعلى تماماً */
+.translate-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 250px;
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-glass);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(62, 39, 35, 0.2);
+    padding: 12px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.translate-search-input {
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border-glass);
+    background: var(--bg-main);
+    color: var(--text-main);
+    font-size: 0.85rem;
+    outline: none;
+}
+
+.translate-search-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(111, 78, 55, 0.15);
+}
+
+.languages-list-box {
+    max-height: 200px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.lang-option-item {
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+    transition: background 0.15s;
+    text-align: right;
+}
+
+.lang-option-item:hover {
+    background: var(--accent-color);
+    color: #fff;
 }
 
 /* شريط اليوتيوب */
@@ -204,7 +291,6 @@ body {
     min-width: 0;
 }
 
-/* البطاقات بتأثير الزجاج الضبابي */
 .card {
     background: var(--bg-card);
     backdrop-filter: blur(14px);
@@ -241,7 +327,6 @@ body {
     padding: 20px;
     border-radius: 16px;
     border: 1px solid var(--border-glass);
-    box-shadow: 0 6px 24px rgba(62, 39, 35, 0.05);
 }
 
 .section-block h3 {
@@ -256,7 +341,6 @@ body {
     gap: 10px;
 }
 
-/* الأزرار */
 .btn {
     padding: 10px 16px;
     border-radius: 10px;
@@ -326,16 +410,8 @@ body {
     background: var(--accent-color);
     color: #fff;
     border-color: var(--accent-color);
-    box-shadow: 0 2px 8px rgba(111, 78, 55, 0.25);
 }
 
-.highlight-btn {
-    grid-column: 1 / -1;
-    background: linear-gradient(135deg, var(--accent-color), var(--text-main));
-    color: #fff;
-}
-
-/* شاشة اليوم والشهر */
 .nav-header {
     display: flex;
     justify-content: space-between;
@@ -353,7 +429,6 @@ body {
     font-weight: 700;
     font-size: 1.1rem;
     color: var(--accent-color);
-    margin-right: 10px;
 }
 
 .nav-actions {
@@ -362,16 +437,15 @@ body {
     flex-wrap: wrap;
 }
 
-.jump-card {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.jump-label {
-    font-weight: 600;
+.status-select {
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border-glass);
+    background: var(--bg-main);
+    color: var(--text-main);
     font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
 }
 
 .day-card {
@@ -389,17 +463,6 @@ body {
     margin-bottom: 20px;
     gap: 10px;
     flex-wrap: wrap;
-}
-
-.status-select {
-    padding: 8px 12px;
-    border-radius: 10px;
-    border: 1px solid var(--border-glass);
-    background: var(--bg-main);
-    color: var(--text-main);
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
 }
 
 .eval-card {
@@ -420,7 +483,6 @@ body {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    padding-left: 5px;
 }
 
 .auth-switch-text {
@@ -436,28 +498,7 @@ body {
     text-decoration: none;
 }
 
-@media (max-width: 900px) {
-    .main-layout {
-        grid-template-columns: 1fr;
-        padding: 10px;
-    }
-    .header-bar {
-        flex-direction: column;
-        align-items: stretch;
-        text-align: center;
-    }
-    .header-controls {
-        justify-content: center;
-    }
-    .nav-header {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .nav-actions {
-        justify-content: center;
-    }
-    .day-nav-header {
-        flex-direction: column;
-        text-align: center;
-    }
-}
+/* إلغاء شريط جوجل المزعج العلوي */
+.goog-te-banner-frame.skiptranslate { display: none !important; }
+body { top: 0px !important; }
+.goog-te-gadget { font-size: 0px !important; }

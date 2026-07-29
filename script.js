@@ -57,7 +57,7 @@ function playSound(type) {
             osc.stop(audioCtx.currentTime + 0.15);
         }
     } catch (e) {
-        console.log("Audio not supported or blocked");
+        console.log("Audio not supported");
     }
 }
 
@@ -72,6 +72,75 @@ function toggleTheme() {
         localStorage.setItem('bu_kamel_theme', 'dark');
     }
 }
+
+// ================= نظام الترجمة والبحث الفعال =================
+const availableLanguages = [
+    { code: 'ar', name: 'العربية (Arabic)' },
+    { code: 'en', name: 'الإنجليزية (English)' },
+    { code: 'fr', name: 'الفرنسية (French)' },
+    { code: 'es', name: 'الإسبانية (Spanish)' },
+    { code: 'de', name: 'الألمانية (German)' },
+    { code: 'it', name: 'الإيطالية (Italian)' },
+    { code: 'tr', name: 'التركية (Turkish)' },
+    { code: 'ur', name: 'الأوردو (Urdu)' },
+    { code: 'hi', name: 'الهندية (Hindi)' },
+    { code: 'zh-CN', name: 'الصينية (Chinese)' },
+    { code: 'ja', name: 'اليابانية (Japanese)' },
+    { code: 'ru', name: 'الروسية (Russian)' },
+    { code: 'fa', name: 'الفارسية (Persian)' },
+    { code: 'id', name: 'الإندونيسية (Indonesian)' }
+];
+
+function toggleTranslateMenu() {
+    const dropdown = document.getElementById('translateDropdown');
+    dropdown.classList.toggle('hidden');
+    if (!dropdown.classList.contains('hidden')) {
+        renderLanguagesList(availableLanguages);
+        const searchInput = document.getElementById('langSearchInput');
+        searchInput.value = '';
+        searchInput.focus();
+    }
+}
+
+function renderLanguagesList(langs) {
+    const box = document.getElementById('languagesListBox');
+    box.innerHTML = '';
+    if (langs.length === 0) {
+        box.innerHTML = `<div style="padding: 8px; text-align: center; color: var(--text-muted); font-size: 0.8rem;">لا توجد لغة مطابقة</div>`;
+        return;
+    }
+    langs.forEach(lang => {
+        const div = document.createElement('div');
+        div.className = 'lang-option-item';
+        div.textContent = lang.name;
+        div.onclick = () => triggerGoogleTranslate(lang.code);
+        box.appendChild(div);
+    });
+}
+
+function filterLanguages(query) {
+    const q = query.trim().toLowerCase();
+    const filtered = availableLanguages.filter(l => l.name.toLowerCase().includes(q));
+    renderLanguagesList(filtered);
+}
+
+function triggerGoogleTranslate(langCode) {
+    const selectField = document.querySelector('.goog-te-combo');
+    if (selectField) {
+        selectField.value = langCode;
+        selectField.dispatchEvent(new Event('change'));
+    }
+    document.getElementById('translateDropdown').classList.add('hidden');
+}
+
+window.addEventListener('click', function(e) {
+    const wrapper = document.querySelector('.google-translate-wrapper');
+    const dropdown = document.getElementById('translateDropdown');
+    if (wrapper && dropdown && !wrapper.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
+// ==========================================================
 
 window.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('bu_kamel_theme');
@@ -111,7 +180,6 @@ function handleRegister() {
         alert('الرجاء إدخال اسم المستخدم وكلمة المرور!');
         return;
     }
-
     if (pass1 !== pass2) {
         alert('كلمتا المرور غير متطابقتين!');
         return;
@@ -119,20 +187,18 @@ function handleRegister() {
 
     const existingUser = db.users.find(u => u.username.toLowerCase() === username.toLowerCase());
     if (existingUser) {
-        alert('⚠️ عذراً، اسم المستخدم هذا موجود مسبقاً! الرجاء اختيار اسم آخر.');
+        alert('⚠️ اسم المستخدم موجود مسبقاً!');
         return;
     }
 
-    const newUser = {
+    db.users.push({
         username: username,
         pass: pass1,
         data: {},
         customHabits: JSON.parse(JSON.stringify(defaultHabits))
-    };
-
-    db.users.push(newUser);
+    });
     saveDatabase();
-    alert(`تم إنشاء الحساب بنجاح يا ${username}! يمكنك تسجيل الدخول الآن.`);
+    alert(`تم إنشاء الحساب بنجاح يا ${username}!`);
     switchAuthView('login');
 }
 
@@ -181,11 +247,8 @@ function handleScopeChange(val) {
     monthWrap.classList.add('hidden');
     quarterWrap.classList.add('hidden');
 
-    if (val === 'month') {
-        monthWrap.classList.remove('hidden');
-    } else if (val === 'quarter') {
-        quarterWrap.classList.remove('hidden');
-    }
+    if (val === 'month') monthWrap.classList.remove('hidden');
+    else if (val === 'quarter') quarterWrap.classList.remove('hidden');
 }
 
 function addNewCustomHabit() {
@@ -199,15 +262,11 @@ function addNewCustomHabit() {
     }
 
     let scopeVal = 'year';
-    if (scopeType === 'month') {
-        scopeVal = `month_${document.getElementById('habitTargetMonth').value}`;
-    } else if (scopeType === 'quarter') {
-        scopeVal = document.getElementById('habitTargetQuarter').value;
-    }
+    if (scopeType === 'month') scopeVal = `month_${document.getElementById('habitTargetMonth').value}`;
+    else if (scopeType === 'quarter') scopeVal = document.getElementById('habitTargetQuarter').value;
 
-    const newId = 'habit_' + Date.now();
     currentUser.customHabits.push({
-        id: newId,
+        id: 'habit_' + Date.now(),
         name: name,
         icon: icon,
         scope: scopeVal
@@ -221,7 +280,7 @@ function addNewCustomHabit() {
 }
 
 function deleteHabit(habitId) {
-    if (confirm('هل أنت متأكد من حذف هذه العادة نهائياً؟')) {
+    if (confirm('هل أنت متأكد من حذف هذه العادة؟')) {
         currentUser.customHabits = currentUser.customHabits.filter(h => h.id !== habitId);
         saveDatabase();
         renderAdminHabitsList();
@@ -237,9 +296,8 @@ function renderAdminHabitsList() {
     currentUser.customHabits.forEach(habit => {
         let scopeDesc = 'طوال السنة';
         if (habit.scope.startsWith('month_')) {
-            const mIdx = parseInt(habit.scope.split('_')[1]);
             const mNames = ["يناير", "فبراير", "مارس", "إبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-            scopeDesc = `شهر ${mNames[mIdx]}`;
+            scopeDesc = `شهر ${mNames[parseInt(habit.scope.split('_')[1])]}`;
         } else if (['Q1', 'Q2', 'Q3', 'Q4'].includes(habit.scope)) {
             scopeDesc = `ربع سنة ${habit.scope}`;
         }
@@ -262,8 +320,7 @@ function getActiveHabitsForCurrentMonth() {
     return currentUser.customHabits.filter(habit => {
         if (habit.scope === 'year') return true;
         if (habit.scope.startsWith('month_')) {
-            const mIdx = parseInt(habit.scope.split('_')[1]);
-            return mIdx === currentMonth;
+            return parseInt(habit.scope.split('_')[1]) === currentMonth;
         }
         if (['Q1', 'Q2', 'Q3', 'Q4'].includes(habit.scope)) {
             const qMap = { 'Q1': [0, 1, 2], 'Q2': [3, 4, 5], 'Q3': [6, 7, 8], 'Q4': [9, 10, 11] };
@@ -297,7 +354,7 @@ function addNewYear() {
     const nextExpectedYear = Math.max(...availableYears) + 1;
 
     if (actualCurrentYear < nextExpectedYear) {
-        alert(`عذراً يا بطل! لا يمكنك إضافة سنة ${nextExpectedYear} لأننا ما زلنا في عام ${actualCurrentYear}.`);
+        alert(`لا يمكنك إضافة سنة ${nextExpectedYear} قبل حلولها.`);
         return;
     }
 
@@ -305,9 +362,9 @@ function addNewYear() {
         availableYears.push(nextExpectedYear);
         localStorage.setItem('bu_kamel_years', JSON.stringify(availableYears));
         renderYearsList();
-        alert(`تم فتح وإضافة عام ${nextExpectedYear} بنجاح! 🎉`);
+        alert(`تم فتح عام ${nextExpectedYear} بنجاح! 🎉`);
     } else {
-        alert('هذه السنة موجودة بالفعل في السجل.');
+        alert('هذه السنة موجودة بالفعل.');
     }
 }
 
@@ -319,10 +376,7 @@ function openYear(year) {
 }
 
 function renderMonthsGrid() {
-    const months = [
-        "يناير", "فبراير", "مارس", "إبريل", "مايو", "يونيو",
-        "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
-    ];
+    const months = ["يناير", "فبراير", "مارس", "إبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
     const grid = document.getElementById('monthsGrid');
     grid.innerHTML = '';
 
@@ -394,7 +448,7 @@ function renderDayHabits() {
 
     const activeHabits = getActiveHabitsForCurrentMonth();
     if (activeHabits.length === 0) {
-        container.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 20px;">لا توجد عادات مخصصة لهذا الشهر. أضف عادات جديدة من لوحة التحكم الرئيسية!</p>`;
+        container.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 20px;">لا توجد عادات مخصصة لهذا الشهر.</p>`;
         return;
     }
 
@@ -462,15 +516,13 @@ function updateDashboardPerformance() {
 
     const percentage = totalPossible > 0 ? Math.min(100, Math.round((earnedPoints / totalPossible) * 100)) : 0;
     const displayEl = document.getElementById('actualPerformanceDisplay');
-    if (displayEl) {
-        displayEl.textContent = `${percentage}%`;
-    }
+    if (displayEl) displayEl.textContent = `${percentage}%`;
 }
 
 function openFullMonthView() {
     document.getElementById('monthView').classList.add('hidden');
     document.getElementById('fullMonthView').classList.remove('hidden');
-    document.getElementById('fullMonthHeaderTitle').textContent = `تعديل شهر ${currentMonthName} كاملًا (${currentYear})`;
+    document.getElementById('fullMonthHeaderTitle').textContent = `تعديل شهر ${currentMonthName} كاملاً (${currentYear})`;
 
     const container = document.getElementById('fullMonthContentContainer');
     container.innerHTML = '';
@@ -531,9 +583,7 @@ function openQuarterEvaluation(title, monthsArray) {
         
         const monthActiveHabits = currentUser.customHabits.filter(habit => {
             if (habit.scope === 'year') return true;
-            if (habit.scope.startsWith('month_')) {
-                return parseInt(habit.scope.split('_')[1]) === mAdjusted;
-            }
+            if (habit.scope.startsWith('month_')) return parseInt(habit.scope.split('_')[1]) === mAdjusted;
             if (['Q1', 'Q2', 'Q3', 'Q4'].includes(habit.scope)) {
                 const qMap = { 'Q1': [0, 1, 2], 'Q2': [3, 4, 5], 'Q3': [6, 7, 8], 'Q4': [9, 10, 11] };
                 return qMap[habit.scope].includes(mAdjusted);
@@ -554,7 +604,7 @@ function openQuarterEvaluation(title, monthsArray) {
     });
 
     const ratio = totalPossible > 0 ? Math.round((earnedPoints / totalPossible) * 100) : 0;
-    document.getElementById('evalContentBox').innerHTML = `نسبة إنجازك الكلية في <strong>${title}</strong> لعام ${currentYear} هي: <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>\n\nاستمر في الحفاظ على هذا المستوى الرائع والالتزام بجدول عاداتك اليومية!`;
+    document.getElementById('evalContentBox').innerHTML = `نسبة إنجازك في <strong>${title}</strong> هي: <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>\n\nاستمر في التقدم الرائع!`;
 }
 
 function openAnnualEvaluation() {
@@ -563,7 +613,7 @@ function openAnnualEvaluation() {
     document.getElementById('fullMonthView').classList.add('hidden');
     document.getElementById('evaluationView').classList.remove('hidden');
     
-    document.getElementById('evalHeaderTitle').textContent = "التقييم السنوي الشامل";
+    document.getElementById('evalHeaderTitle').textContent = "التقييم السنوي";
     document.getElementById('evalTitleBox').textContent = `التقرير السنوي الشامل لعام ${currentYear}`;
 
     let totalPossible = 0;
@@ -573,9 +623,7 @@ function openAnnualEvaluation() {
         const daysCount = new Date(currentYear, m + 1, 0).getDate();
         const monthActiveHabits = currentUser.customHabits.filter(habit => {
             if (habit.scope === 'year') return true;
-            if (habit.scope.startsWith('month_')) {
-                return parseInt(habit.scope.split('_')[1]) === m;
-            }
+            if (habit.scope.startsWith('month_')) return parseInt(habit.scope.split('_')[1]) === m;
             if (['Q1', 'Q2', 'Q3', 'Q4'].includes(habit.scope)) {
                 const qMap = { 'Q1': [0, 1, 2], 'Q2': [3, 4, 5], 'Q3': [6, 7, 8], 'Q4': [9, 10, 11] };
                 return qMap[habit.scope].includes(m);
@@ -596,10 +644,9 @@ function openAnnualEvaluation() {
     }
 
     const ratio = totalPossible > 0 ? Math.round((earnedPoints / totalPossible) * 100) : 0;
-    document.getElementById('evalContentBox').innerHTML = `متوسط إنجازك العام طوال عام ${currentYear} هو: <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>\n\nالالتزام بالخطوات الصغيرة يومياً يصنع إنجازات وتغييرات جذرية على المدى الطويل!`;
+    document.getElementById('evalContentBox').innerHTML = `متوسط إنجازك العام طوال عام ${currentYear} هو: <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>\n\nإنجاز عظيم، واصل التميز!`;
 }
 
-// زر تقرير وإغلاق الشهر الفعلي
 function closeMonthReport() {
     document.getElementById('monthView').classList.add('hidden');
     document.getElementById('evaluationView').classList.remove('hidden');
@@ -622,5 +669,5 @@ function closeMonthReport() {
     }
 
     const ratio = totalPossible > 0 ? Math.round((earnedPoints / totalPossible) * 100) : 0;
-    document.getElementById('evalContentBox').innerHTML = `لقد أنهيت تتبع عادات شهر <strong>${currentMonthName}</strong> بنجاح!\n\nنسبة إنجازك الكلية لهذا الشهر هي: <span style="color: var(--success-color); font-size: 1.6rem; font-weight: 900;">${ratio}%</span>\n\nشكراً لالتزامك، تذكر أن الاستمرارية هي مفتاح التفوق والنجاح الدائم! 🚀`;
+    document.getElementById('evalContentBox').innerHTML = `نسبة إنجازك الكلية لشهر <strong>${currentMonthName}</strong> هي: <span style="color: var(--success-color); font-size: 1.6rem; font-weight: 900;">${ratio}%</span>\n\nشكراً لالتزامك، الاستمرارية هي سر النجاح! 🚀`;
 }

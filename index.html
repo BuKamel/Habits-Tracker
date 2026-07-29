@@ -3,111 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة متتبع العادات - Bu Kamel</title>
-    <link rel="stylesheet" href="style.css">
+    <title>منصة Bu Kamel - إدارة العادات والمهام</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- الشريط العلوي الرئيسي -->
+    <!-- الشريط العلوي الرئيسي (زر الترجمة في أقصى اليمين أو البداية ليكون بالأعلى تماماً) -->
     <header class="header-bar">
-        <div class="brand-title">
-            <span>☕</span> <strong>منصة Bu Kamel</strong>
-        </div>
-        <div class="header-controls">
-            <!-- أداة الترجمة الفورية -->
-            <div id="google_translate_element"></div>
-            <!-- زر تبديل الوضع المظلم/الفاتح -->
-            <button class="theme-toggle-btn" onclick="toggleTheme()" title="تغيير المظهر">🌙</button>
-            <!-- معلومات المستخدم وزر الرئيسية الثابت -->
-            <div id="userHeaderInfo" class="hidden" style="display: flex; align-items: center; gap: 8px;">
-                <button class="btn btn-primary btn-sm" onclick="goHome()">🏠 الرئيسية</button>
-                <span id="headerUsername"></span>
-                <button class="btn btn-secondary btn-sm" onclick="logout()">خروج</button>
+        <div class="header-controls" style="width: 100%; justify-content: space-between; align-items: center;">
+            <div class="brand-title">
+                <span>☕</span> <strong>منصة Bu Kamel</strong>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <!-- زر القائمة المنسدلة للترجمة في أعلى الصفحة -->
+                <div class="google-translate-wrapper">
+                    <button class="custom-translate-btn" onclick="toggleTranslateMenu()">
+                        🌐 <span>الترجمة</span>
+                    </button>
+                    <div id="translateDropdown" class="translate-dropdown-menu hidden">
+                        <input type="text" id="langSearchInput" class="translate-search-input" placeholder="بحث عن لغة..." oninput="filterLanguages(this.value)">
+                        <div id="languagesListBox" class="languages-list-box">
+                            <!-- تعبئة اللغات برمجياً -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- زر المظهر -->
+                <button class="theme-toggle-btn btn btn-secondary btn-sm" onclick="toggleTheme()" title="تغيير المظهر">🌙</button>
+
+                <!-- معلومات المستخدم -->
+                <div id="userHeaderInfo" class="hidden" style="display: flex; align-items: center; gap: 8px;">
+                    <button class="btn btn-primary btn-sm" onclick="goHome()">🏠 الرئيسية</button>
+                    <span id="headerUsername" style="font-weight: 700;"></span>
+                    <button class="btn btn-danger btn-sm" onclick="logout()">خروج</button>
+                </div>
             </div>
         </div>
     </header>
 
-    <!-- شريط قناة اليوتيوب الرسمية -->
+    <!-- شريط اليوتيوب -->
     <div class="channel-bar">
-        <span>🎬 قناة يوتيوب الرسمية: <strong>Bu Kamel R2A</strong></span>
-        <span>🔗 رابط القناة: <a href="https://www.youtube.com/@BuKamel-R2A" target="_blank">youtube.com/@BuKamel-R2A</a></span>
+        <span>تابع محتوانا على يوتيوب للتنمية الذاتية والتكنولوجيا:</span>
+        <a href="https://youtube.com" target="_blank">قناة يوتيوب Bu Kamel 🚀</a>
     </div>
 
-    <!-- شريط العبارات التحفيزية الديناميكية -->
-    <div class="motivation-banner" id="motivationBannerText">
-        🌟 "النجاح ليس تصادُفاً، بل هو ثمرة الاجتهاد المستمر وتنظيم العادات اليومية."
+    <!-- شريط التحفيز -->
+    <div class="motivation-banner">
+        "الاستمرارية والخطوات الصغيرة اليومية تصنع مستقبلاً عظيماً!" ☕✨
     </div>
 
-    <!-- قسم تسجيل الدخول وإنشاء الحساب -->
+    <!-- شاشة تسجيل الدخول -->
     <div id="loginViewContainer" class="auth-wrapper">
         <div id="loginView" class="auth-box">
-            <h2>تسجيل الدخول للنظام</h2>
-            <p class="auth-subtitle">أدخل بيانات حسابك للمتابعة:</p>
+            <h2>تسجيل الدخول</h2>
+            <p class="auth-subtitle">أدخل بيانات حسابك للمتابعة</p>
             <input type="text" id="loginUser" class="input-field" placeholder="اسم المستخدم">
             <input type="password" id="loginPass" class="input-field" placeholder="كلمة المرور">
-            <button class="btn btn-primary full-width" onclick="handleLogin()">تسجيل الدخول</button>
+            <button class="btn btn-primary full-width" onclick="handleLogin()">دخول</button>
             <p class="auth-switch-text">ليس لديك حساب؟ <a href="#" onclick="switchAuthView('register')">إنشاء حساب جديد</a></p>
         </div>
 
         <div id="registerView" class="auth-box hidden">
             <h2>إنشاء حساب جديد</h2>
-            <p class="auth-subtitle">اختر اسم مستخدم فريد وكلمة مرور:</p>
-            <input type="text" id="regUser" class="input-field" placeholder="اسم المستخدم (Username)">
+            <p class="auth-subtitle">انضم لمنصة Bu Kamel الشخصية</p>
+            <input type="text" id="regUser" class="input-field" placeholder="اسم المستخدم">
             <input type="password" id="regPass1" class="input-field" placeholder="كلمة المرور">
             <input type="password" id="regPass2" class="input-field" placeholder="تأكيد كلمة المرور">
-            <button class="btn btn-primary full-width" onclick="handleRegister()">إتمام التسجيل وإنشاء الحساب</button>
-            <p class="auth-switch-text"><a href="#" onclick="switchAuthView('login')">العودة لتسجيل الدخول</a></p>
+            <button class="btn btn-primary full-width" onclick="handleRegister()">تسجيل الحساب</button>
+            <p class="auth-switch-text">لديك حساب بالفعل؟ <a href="#" onclick="switchAuthView('login')">تسجيل الدخول</a></p>
         </div>
     </div>
 
-    <!-- الهيكل الرئيسي للتطبيق -->
-    <div id="mainAppLayout" class="main-layout hidden">
-        
-        <!-- القائمة الجانبية -->
+    <!-- تخطيط التطبيق الرئيسي -->
+    <main id="mainAppLayout" class="main-layout hidden">
         <aside class="sidebar-years">
-            <h3>📂 سجل السنوات</h3>
-            <p class="sidebar-desc">اختر السنة لعرض سجلاتها:</p>
-            <div class="years-list" id="sidebarYearsList"></div>
-            <button class="btn btn-primary btn-sm" onclick="addNewYear()" style="margin-top: 10px;">➕ إضافة السنة الجديدة</button>
+            <h3>أعوام المتابعة</h3>
+            <p class="sidebar-desc">اختر السنة أو أضف سنة جديدة</p>
+            <div id="sidebarYearsList" class="years-list"></div>
+            <button class="btn btn-success full-width" style="margin-top: 15px;" onclick="addNewYear()">➕ فتح سنة جديدة</button>
         </aside>
 
-        <!-- منطقة المحتوى الرئيسية -->
-        <main class="content-area">
-            
-            <!-- لوحة التحكم الرئيسية -->
-            <div id="mainDashboardView">
-                <h2>لوحة التحكم والبيانات الفعلية</h2>
-                
-                <div class="dashboard-grid" style="grid-template-columns: 1fr;">
-                    <div class="card">
-                        <h3>📊 تقييم الأداء (الشهر الفعلي)</h3>
-                        <p class="card-subtitle">بناءً على الشهر النشط حالياً:</p>
-                        <div class="performance-score" id="actualPerformanceDisplay">0%</div>
-                    </div>
-                </div>
+        <section class="content-area">
+            <div id="mainDashboardView" class="card">
+                <h3>شهور السنة</h3>
+                <p class="card-subtitle">اختر الشهر للبدء في تخصيص ومتابعة عاداتك اليومية</p>
+                <div id="monthsGrid" class="grid-options" style="margin-bottom: 20px;"></div>
 
-                <!-- قسم إدارة العادات (إضافة وحذف) -->
-                <div class="card" style="margin-top: 20px;">
-                    <h3>⚙️ إدارة عاداتك اليومية</h3>
-                    <p class="card-subtitle">أضف عادة جديدة وحدد نطاقها الزمني (شهر، ربع سنة، أو سنة كاملة):</p>
+                <div class="section-block" style="margin-top: 20px;">
+                    <h3>إدارة عاداتك المخصصة</h3>
+                    <p class="card-subtitle">أضف عادات جديدة وحدد نطاق ظهورها (طوال السنة، شهر محدد، أو ربع سنة)</p>
                     
-                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
-                        <input type="text" id="newHabitName" class="input-field" placeholder="اسم العادة (مثال: قراءة كتاب)">
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                        <input type="text" id="newHabitName" class="input-field" placeholder="اسم العادة (مثلاً: قراءة كتاب)">
+                        <input type="text" id="newHabitIcon" class="input-field" placeholder="أيقونة تعبيرية (مثلاً: 📚)">
                         
-                        <div style="display: flex; gap: 10px;">
-                            <input type="text" id="newHabitIcon" class="input-field" placeholder="أيقونة تعبيرية (مثال: 📚)" style="width: 150px;">
-                            <select id="habitScopeType" class="status-select" onchange="handleScopeChange(this.value)">
-                                <option value="year">📅 طوال السنة</option>
-                                <option value="quarter">📈 ربع سنة محدّد</option>
-                                <option value="month">📆 شهر محدّد</option>
-                            </select>
-                        </div>
+                        <select id="habitScopeType" class="status-select" onchange="handleScopeChange(this.value)">
+                            <option value="year">طوال السنة (تظهر كل الشهور)</option>
+                            <option value="month">شهر محدد فقط</option>
+                            <option value="quarter">ربع سنة محدد (Q1, Q2, Q3, Q4)</option>
+                        </select>
 
-                        <!-- قائمة منسدلة للشهور (تظهر عند اختيار شهر) -->
                         <div id="scopeMonthWrapper" class="hidden">
-                            <label style="font-size: 0.85rem; font-weight: 600;">اختر الشهر:</label>
-                            <select id="habitTargetMonth" class="status-select">
+                            <select id="habitTargetMonth" class="status-select full-width">
                                 <option value="0">يناير</option><option value="1">فبراير</option><option value="2">مارس</option>
                                 <option value="3">إبريل</option><option value="4">مايو</option><option value="5">يونيو</option>
                                 <option value="6">يوليو</option><option value="7">أغسطس</option><option value="8">سبتمبر</option>
@@ -115,112 +114,94 @@
                             </select>
                         </div>
 
-                        <!-- قائمة منسدلة لأرباع السنة (تظهر عند اختيار ربع) -->
                         <div id="scopeQuarterWrapper" class="hidden">
-                            <label style="font-size: 0.85rem; font-weight: 600;">اختر ربع السنة:</label>
-                            <select id="habitTargetQuarter" class="status-select">
-                                <option value="Q1">Q1 (الربع الأول: يناير - مارس)</option>
-                                <option value="Q2">Q2 (الربع الثاني: إبريل - يونيو)</option>
-                                <option value="Q3">Q3 (الربع الثالث: يوليو - سبتمبر)</option>
-                                <option value="Q4">Q4 (الربع الرابع: أكتوبر - ديسمبر)</option>
+                            <select id="habitTargetQuarter" class="status-select full-width">
+                                <option value="Q1">الربع الأول (يناير - مارس)</option>
+                                <option value="Q2">الربع الثاني (إبريل - يونيو)</option>
+                                <option value="Q3">الربع الثالث (يوليو - سبتمبر)</option>
+                                <option value="Q4">الربع الرابع (أكتوبر - ديسمبر)</option>
                             </select>
                         </div>
 
-                        <button class="btn btn-primary" onclick="addNewCustomHabit()">➕ إضافة العادة للقائمة</button>
+                        <button class="btn btn-primary" onclick="addNewCustomHabit()">إضافة العادة الجديدة</button>
                     </div>
 
-                    <div style="margin-top: 20px;">
-                        <h4 style="margin-bottom: 10px;">📋 العادات النشطة الحالية:</h4>
-                        <div id="currentHabitsListAdmin" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                    <div id="currentHabitsListAdmin" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                </div>
+
+                <div class="section-block" style="margin-top: 20px;">
+                    <h3>تقارير الأداء الشاملة</h3>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                        <button class="btn btn-secondary" onclick="openQuarterEvaluation('الربع الأول (Q1)', [1, 2, 3])">تقرير Q1</button>
+                        <button class="btn btn-secondary" onclick="openQuarterEvaluation('الربع الثاني (Q2)', [4, 5, 6])">تقرير Q2</button>
+                        <button class="btn btn-secondary" onclick="openQuarterEvaluation('الربع الثالث (Q3)', [7, 8, 9])">تقرير Q3</button>
+                        <button class="btn btn-secondary" onclick="openQuarterEvaluation('الربع الرابع (Q4)', [10, 11, 12])">تقرير Q4</button>
+                        <button class="btn btn-primary" onclick="openAnnualEvaluation()">التقرير السنوي الشامل 🏆</button>
                     </div>
                 </div>
 
-                <div class="section-block">
-                    <h3>📈 الأرباع والتقييمات السنوية:</h3>
-                    <div class="grid-options">
-                        <button class="option-btn" onclick="openQuarterEvaluation('الربع الأول Q1', [1,2,3])">Q1 (الربع الأول)</button>
-                        <button class="option-btn" onclick="openQuarterEvaluation('الربع الثاني Q2', [4,5,6])">Q2 (الربع الثاني)</button>
-                        <button class="option-btn" onclick="openQuarterEvaluation('الربع الثالث Q3', [7,8,9])">Q3 (الربع الثالث)</button>
-                        <button class="option-btn" onclick="openQuarterEvaluation('الربع الرابع Q4', [10,11,12])">Q4 (الربع الرابع)</button>
-                        <button class="option-btn highlight-btn" onclick="openAnnualEvaluation()">⭐ التقييم السنوي الشامل</button>
-                    </div>
-                </div>
-
-                <div class="section-block">
-                    <h3>📅 شهور السنة للتتبع الفعلي:</h3>
-                    <div class="grid-options" id="monthsGrid"></div>
+                <div class="card" style="margin-top: 20px; text-align: center;">
+                    <h3>نسبة الإنجاز العامة</h3>
+                    <div id="actualPerformanceDisplay" class="performance-score">0%</div>
                 </div>
             </div>
 
-            <!-- عرض الشهر اليومي -->
-            <div id="monthView" class="hidden">
+            <!-- شاشة متابعة الشهر اليومي -->
+            <div id="monthView" class="card hidden">
                 <div class="nav-header">
-                    <div>
-                        <button class="btn btn-secondary" onclick="goHome()">⬅ عودة للرئيسية</button>
-                        <span id="activeMonthTitle" class="nav-title"></span>
-                    </div>
+                    <span id="activeMonthTitle" class="nav-title">تتبع العادات</span>
                     <div class="nav-actions">
-                        <button class="btn btn-success" onclick="openFullMonthView()">📂 تعديل الشهر كامل</button>
-                        <button class="btn btn-danger" onclick="closeMonthReport()">🏁 تقرير وإغلاق الشهر</button>
+                        <button class="btn btn-secondary btn-sm" onclick="openFullMonthView()">📋 تعديل الشهر كاملاً</button>
+                        <button class="btn btn-primary btn-sm" onclick="closeMonthReport()">📊 تقرير وإغلاق الشهر</button>
+                        <button class="btn btn-secondary btn-sm" onclick="goHome()">🏠 لوحة التحكم</button>
                     </div>
                 </div>
 
-                <div class="card jump-card">
-                    <span class="jump-label">🎯 الانتقال السريع لليوم:</span>
-                    <select id="quickDayDropdown" class="status-select" onchange="jumpToSelectedDay(this.value)">
-                        <option value="" disabled selected>-- اختر اليوم --</option>
-                    </select>
+                <div class="jump-card" style="margin: 15px 0; background: var(--bg-main); padding: 12px; border-radius: 12px; border: 1px solid var(--border-glass);">
+                    <span class="jump-label">⚡ الانتقال السريع:</span>
+                    <select id="quickDayDropdown" class="status-select" onchange="jumpToSelectedDay(this.value)"></select>
                 </div>
 
                 <div class="day-card">
                     <div class="day-nav-header">
-                        <button class="btn btn-primary" onclick="changeDay(-1)">▶ اليوم السابق</button>
-                        <h3 id="activeDayTitle"></h3>
-                        <button class="btn btn-primary" onclick="changeDay(1)">اليوم التالي ◀</button>
+                        <button class="btn btn-secondary btn-sm" onclick="changeDay(-1)">▶ اليوم السابق</button>
+                        <h3 id="activeDayTitle" style="color: var(--accent-color);">اليوم</h3>
+                        <button class="btn btn-secondary btn-sm" onclick="changeDay(1)">اليوم التالي ◀</button>
                     </div>
-                    <div id="habitsListContainer"></div>
+                    <div id="habitsListContainer" style="display: flex; flex-direction: column; gap: 10px;"></div>
                 </div>
             </div>
 
-            <!-- عرض الشهر بالكامل -->
-            <div id="fullMonthView" class="hidden">
+            <!-- شاشة تعديل الشهر كاملاً -->
+            <div id="fullMonthView" class="card hidden">
                 <div class="nav-header">
-                    <div>
-                        <button class="btn btn-secondary" onclick="openMonth(currentMonth, currentMonthName)">⬅ العودة للتتبع اليومي</button>
-                        <span id="fullMonthHeaderTitle" class="nav-title"></span>
-                    </div>
+                    <span id="fullMonthHeaderTitle" class="nav-title">تعديل الشهر كاملاً</span>
+                    <button class="btn btn-secondary btn-sm" onclick="openMonth(currentMonth, currentMonthName)">⬅ العودة للتتبع اليومي</button>
                 </div>
-                <div class="card">
-                    <h3>📋 عرض وتعديل الشهر كاملاً</h3>
-                    <p class="card-subtitle">تعديل أي عادة لأي يوم يتم حفظه فوراً:</p>
-                    <div id="fullMonthContentContainer" class="full-month-scroll"></div>
-                </div>
+                <div id="fullMonthContentContainer" class="full-month-scroll" style="margin-top: 15px;"></div>
             </div>
 
-            <!-- عرض التقييمات والتقارير -->
-            <div id="evaluationView" class="hidden">
+            <!-- شاشة التقارير والتقييمات -->
+            <div id="evaluationView" class="card hidden">
                 <div class="nav-header">
-                    <div>
-                        <button class="btn btn-secondary" onclick="goHome()">⬅ عودة للرئيسية</button>
-                        <span id="evalHeaderTitle" class="nav-title"></span>
-                    </div>
+                    <span id="evalHeaderTitle" class="nav-title">تقرير الأداء</span>
+                    <button class="btn btn-secondary btn-sm" onclick="goHome()">🏠 العودة للرئيسية</button>
                 </div>
-                <div class="card eval-card">
-                    <h3 id="evalTitleBox">تقرير الأداء</h3>
-                    <p id="evalContentBox" class="eval-content"></p>
-                    <button class="btn btn-primary" onclick="goHome()">إغلاق التقرير</button>
+                <div class="eval-card">
+                    <h3 id="evalTitleBox" style="color: var(--accent-color); font-size: 1.4rem; margin-bottom: 15px;"></h3>
+                    <div id="evalContentBox" class="eval-content"></div>
                 </div>
             </div>
+        </section>
+    </main>
 
-        </main>
-    </div>
-
+    <!-- عناصر ترجمة جوجل المخفية والسكربتات -->
+    <div id="google_translate_element" style="display:none;"></div>
     <script type="text/javascript">
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({
                 pageLanguage: 'ar',
-                includedLanguages: 'ar,en,fr,es,de,it,tr,ur,hi,zh-CN,ja,ru',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                includedLanguages: 'ar,en,fr,es,de,it,tr,ur,hi,zh-CN,ja,ru,fa,id',
                 autoDisplay: false
             }, 'google_translate_element');
         }
