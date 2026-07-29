@@ -380,10 +380,14 @@ function renderMonthsGrid() {
     const grid = document.getElementById('monthsGrid');
     grid.innerHTML = '';
 
+    const todayDate = new Date();
+    const isActualCurrentYear = (currentYear === todayDate.getFullYear());
+    const actualCurrentMonthIndex = todayDate.getMonth();
+
     months.forEach((mName, index) => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
-        if (currentYear === 2026 && index === 6) {
+        if (isActualCurrentYear && index === actualCurrentMonthIndex) {
             btn.classList.add('active');
             btn.textContent = `⭐ شهر ${mName} (الحالي)`;
         } else {
@@ -397,7 +401,17 @@ function renderMonthsGrid() {
 function openMonth(monthIndex, monthName) {
     currentMonth = monthIndex;
     currentMonthName = monthName;
-    currentDayIndex = 0;
+
+    // الفتح التلقائي على اليوم الحالي إذا كانت السنة والشهر يتطابقان مع وقت النظام الحالي
+    const today = new Date();
+    if (currentYear === today.getFullYear() && currentMonth === today.getMonth()) {
+        currentDayIndex = today.getDate() - 1; // الأيام تبدأ من 0 في الـ Index
+        const maxDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+        if (currentDayIndex >= maxDays) currentDayIndex = maxDays - 1;
+        if (currentDayIndex < 0) currentDayIndex = 0;
+    } else {
+        currentDayIndex = 0; // افتراضي أول يوم للشهر القديم أو المستقبلي
+    }
 
     document.getElementById('mainDashboardView').classList.add('hidden');
     document.getElementById('fullMonthView').classList.add('hidden');
@@ -457,10 +471,10 @@ function renderDayHabits() {
         const currentStatus = currentUser.data[key] || 'none';
 
         const row = document.createElement('div');
-        row.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-glass);";
+        row.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-glass); gap: 10px;";
 
         row.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 10px; font-weight: 600;">
+            <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.9rem;">
                 <span>${habit.icon}</span>
                 <span>${habit.name}</span>
             </div>
@@ -532,15 +546,15 @@ function openFullMonthView() {
     for (let d = 0; d < daysCount; d++) {
         const dayBox = document.createElement('div');
         dayBox.className = 'card';
-        dayBox.style.padding = '15px';
+        dayBox.style.padding = '12px';
 
-        let html = `<div style="font-weight: 700; margin-bottom: 10px; color: var(--accent-color);">📅 اليوم رقم ${d + 1}</div><div style="display: flex; flex-direction: column; gap: 8px;">`;
+        let html = `<div style="font-weight: 700; margin-bottom: 8px; color: var(--accent-color);">📅 اليوم رقم ${d + 1}</div><div style="display: flex; flex-direction: column; gap: 6px;">`;
 
         activeHabits.forEach(habit => {
             const key = `${currentYear}_${currentMonth}_${d}_${habit.id}`;
             const status = currentUser.data[key] || 'none';
             html += `
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; gap: 10px;">
                     <span>${habit.icon} ${habit.name}</span>
                     <select class="status-select btn-sm" onchange="updateFullMonthHabit(${d}, '${habit.id}', this.value)">
                         <option value="none" ${status === 'none' ? 'selected' : ''}>❌ لم تفعل</option>
@@ -564,6 +578,51 @@ function updateFullMonthHabit(dayIdx, habitId, status) {
     else if (status === 'super') playSound('super');
     else playSound('clear');
 }
+
+// ================= مولد الرسائل الذكية والمتنوعة حسب النسبة ونوع التقرير =================
+function getSmartEvaluationMessage(type, ratio, name) {
+    // 1. أكثر من 90% (يتروق عليه بمديح استثنائي)
+    if (ratio > 90) {
+        if (type === 'month') {
+            return `إنجاز أسطوري في شهر <strong>${name}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 👑🔥\n\nيا سلام عليك يا بطل! أنت كدة "تروّق" على أصولها.. التزام حديدي وعزيمة لا تذبل، استمر في هذا المستوى المرعب من الانضباط!`;
+        } else if (type === 'quarter') {
+            return `ملحمة نجاح كبرى في <strong>${name}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 🚀🏆\n\nأداء فلكي يستحق الفخر والترويقة الصح. لقد حطمت التوقعات وأثبتّ أن الاستمرارية تصنع المعجزات!`;
+        } else {
+            return `التقرير السنوي الأسطوري لعام <strong>${currentYear}</strong> بنسبة إنجاز <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 🌟👑\n\nسنة كاملة من المجد والالتزام الخارق! لقد أبدعت حقاً وصنعت مستقبلاً عظيماً، استمتع بثمرة هذا العطاء الضخم!`;
+        }
+    }
+    // 2. من 75% إلى 90% (تحفيز قوي ودفع للأمام)
+    else if (ratio >= 75) {
+        if (type === 'month') {
+            return `أداء ممتاز ومبهر لشهر <strong>${name}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>! 💪✨\n\nأنت في منطقة الأبطال! دفعة صغيرة وتصل للقمة المطلقة، واصل هذا السير الثابت ولا تتراجع أبداً!`;
+        } else if (type === 'quarter') {
+            return `نتيجة رائعة جداً لـ <strong>${name}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>! 🎯🔥\n\nخطواتك ثابتة ومدروسة نحو أهدافك الكبرى، شد حيلك أكثر لتلامس الـ 90% فأنت لها!`;
+        } else {
+            return `حصاد سنوي مشرف جداً لعام <strong>${currentYear}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>! 📈🌟\n\nعام مليء بالإنجازات والتقدم الحقيقي، أنت تسير بخطى واثقة نحو نسخة أفضل منك دائماً!`;
+        }
+    }
+    // 3. من 45% إلى 74% (تشجيع متوازن وتوعية)
+    else if (ratio >= 45) {
+        if (type === 'month') {
+            return `أداء مقبول لشهر <strong>${name}</strong> بنسبة <span style="color: var(--accent-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>. ☕⚠️\n\nبداية جيدة لكنها لا تليق بطموحاتك! عندك طاقة أكبر بكتير، نظم وقتك وشد الهمة في الشاي القادم!`;
+        } else if (type === 'quarter') {
+            return `تقييم <strong>${name}</strong> سجل نسبة <span style="color: var(--accent-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>. 📊💡\n\nالنتيجة متوسطة وفيها مكان كبير للتحسين. حان الوقت لمراجعة الأولويات وإشعال الحماس من جديد!`;
+        } else {
+            return `التقرير السنوي لعام <strong>${currentYear}</strong> بلغ <span style="color: var(--accent-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>. 📉⚖️\n\nسنة فيها وعليها.. أظهرت التزاماً في أوقات وتراجعاً في أوقات أخرى. القادم يحتاج تركيزاً أعمق!`;
+        }
+    }
+    // 4. أقل من 45% (زعل محب وتحفيز يوقظ الهمة)
+    else {
+        if (type === 'month') {
+            return `أنا زعلان منك بصراحة! نسبة إنجاز شهر <strong>${name}</strong> نزلت إلى <span style="color: var(--danger-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 🛑❌\n\nفين العزيمة؟ فين التخطي والالتزام؟ عاداتك الرائعة تنتظرك، استيقظ وفض الغبار عن همتك لأنك تقدر تعمل أفضل من كده بكتير!`;
+        } else if (type === 'quarter') {
+            return `تنبيه جاد وصارم لتقييم <strong>${name}</strong>.. النسبة وصلت إلى <span style="color: var(--danger-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! ⚠️📉\n\nالكلام ده ماينفعش يا بطل! الوقت يمر والتراكمات تكبر، زعلنا اليوم هو بداية انطلاقة قوية بكرة، اعد ترتيب الأوراق فوراً!`;
+        } else {
+            return `جرس إنذار سنوي لعام <strong>${currentYear}</strong> بمعدل <span style="color: var(--danger-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 🛑⚡\n\nالسنة دي راحت في التهاون، وده مايشبهش طموحاتك أبداً. اجمع نفسك الآن واجعل القادم نقطة تحول تاريخية لك!`;
+        }
+    }
+}
+// ==================================================================================
 
 function openQuarterEvaluation(title, monthsArray) {
     document.getElementById('mainDashboardView').classList.add('hidden');
@@ -604,7 +663,7 @@ function openQuarterEvaluation(title, monthsArray) {
     });
 
     const ratio = totalPossible > 0 ? Math.round((earnedPoints / totalPossible) * 100) : 0;
-    document.getElementById('evalContentBox').innerHTML = `نسبة إنجازك في <strong>${title}</strong> هي: <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>\n\nاستمر في التقدم الرائع!`;
+    document.getElementById('evalContentBox').innerHTML = getSmartEvaluationMessage('quarter', ratio, title);
 }
 
 function openAnnualEvaluation() {
@@ -644,7 +703,7 @@ function openAnnualEvaluation() {
     }
 
     const ratio = totalPossible > 0 ? Math.round((earnedPoints / totalPossible) * 100) : 0;
-    document.getElementById('evalContentBox').innerHTML = `متوسط إنجازك العام طوال عام ${currentYear} هو: <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>\n\nإنجاز عظيم، واصل التميز!`;
+    document.getElementById('evalContentBox').innerHTML = getSmartEvaluationMessage('annual', ratio, currentYear);
 }
 
 function closeMonthReport() {
@@ -669,5 +728,5 @@ function closeMonthReport() {
     }
 
     const ratio = totalPossible > 0 ? Math.round((earnedPoints / totalPossible) * 100) : 0;
-    document.getElementById('evalContentBox').innerHTML = `نسبة إنجازك الكلية لشهر <strong>${currentMonthName}</strong> هي: <span style="color: var(--success-color); font-size: 1.6rem; font-weight: 900;">${ratio}%</span>\n\nشكراً لالتزامك، الاستمرارية هي سر النجاح! 🚀`;
+    document.getElementById('evalContentBox').innerHTML = getSmartEvaluationMessage('month', ratio, currentMonthName);
 }

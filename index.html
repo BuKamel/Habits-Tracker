@@ -9,36 +9,32 @@
 </head>
 <body>
 
-    <!-- الشريط العلوي الرئيسي (زر الترجمة في أقصى اليمين أو البداية ليكون بالأعلى تماماً) -->
+    <!-- الشريط العلوي الرئيسي -->
     <header class="header-bar">
-        <div class="header-controls" style="width: 100%; justify-content: space-between; align-items: center;">
-            <div class="brand-title">
-                <span>☕</span> <strong>منصة Bu Kamel</strong>
+        <div class="brand-title">
+            <span>☕</span> <strong>منصة Bu Kamel</strong>
+        </div>
+
+        <div class="header-controls">
+            <!-- زر القائمة المنسدلة للترجمة -->
+            <div class="google-translate-wrapper">
+                <button class="custom-translate-btn" onclick="toggleTranslateMenu()">
+                    🌐 <span>الترجمة</span>
+                </button>
+                <div id="translateDropdown" class="translate-dropdown-menu hidden">
+                    <input type="text" id="langSearchInput" class="translate-search-input" placeholder="بحث عن لغة..." oninput="filterLanguages(this.value)">
+                    <div id="languagesListBox" class="languages-list-box"></div>
+                </div>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <!-- زر القائمة المنسدلة للترجمة في أعلى الصفحة -->
-                <div class="google-translate-wrapper">
-                    <button class="custom-translate-btn" onclick="toggleTranslateMenu()">
-                        🌐 <span>الترجمة</span>
-                    </button>
-                    <div id="translateDropdown" class="translate-dropdown-menu hidden">
-                        <input type="text" id="langSearchInput" class="translate-search-input" placeholder="بحث عن لغة..." oninput="filterLanguages(this.value)">
-                        <div id="languagesListBox" class="languages-list-box">
-                            <!-- تعبئة اللغات برمجياً -->
-                        </div>
-                    </div>
-                </div>
+            <!-- زر المظهر -->
+            <button class="theme-toggle-btn btn btn-secondary btn-sm" onclick="toggleTheme()" title="تغيير المظهر">🌙</button>
 
-                <!-- زر المظهر -->
-                <button class="theme-toggle-btn btn btn-secondary btn-sm" onclick="toggleTheme()" title="تغيير المظهر">🌙</button>
-
-                <!-- معلومات المستخدم -->
-                <div id="userHeaderInfo" class="hidden" style="display: flex; align-items: center; gap: 8px;">
-                    <button class="btn btn-primary btn-sm" onclick="goHome()">🏠 الرئيسية</button>
-                    <span id="headerUsername" style="font-weight: 700;"></span>
-                    <button class="btn btn-danger btn-sm" onclick="logout()">خروج</button>
-                </div>
+            <!-- معلومات المستخدم -->
+            <div id="userHeaderInfo" class="hidden user-info-box">
+                <button class="btn btn-primary btn-sm" onclick="goHome()">🏠 الرئيسية</button>
+                <span id="headerUsername" style="font-weight: 700;"></span>
+                <button class="btn btn-danger btn-sm" onclick="logout()">خروج</button>
             </div>
         </div>
     </header>
@@ -46,7 +42,7 @@
     <!-- شريط اليوتيوب -->
     <div class="channel-bar">
         <span>تابع محتوانا على يوتيوب للتنمية الذاتية والتكنولوجيا:</span>
-        <a href="https://youtube.com" target="_blank">قناة يوتيوب Bu Kamel 🚀</a>
+        <a href="https://www.youtube.com/@BuKamel-R2A" target="_blank">قناة يوتيوب Bu Kamel 🚀</a>
     </div>
 
     <!-- شريط التحفيز -->
@@ -93,7 +89,7 @@
 
                 <div class="section-block" style="margin-top: 20px;">
                     <h3>إدارة عاداتك المخصصة</h3>
-                    <p class="card-subtitle">أضف عادات جديدة وحدد نطاق ظهورها (طوال السنة، شهر محدد، أو ربع سنة)</p>
+                    <p class="card-subtitle">أضف عادات جديدة وحدد نطاق ظهورها</p>
                     
                     <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
                         <input type="text" id="newHabitName" class="input-field" placeholder="اسم العادة (مثلاً: قراءة كتاب)">
