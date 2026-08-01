@@ -113,7 +113,7 @@ body {
 /* القائمة المنسدلة للبحث تتكيف مع شاشات الهاتف وتمنع الخروج عن الشاشة */
 .translate-dropdown-menu {
     position: absolute;
-    top: calc(100 + 8px);
+    top: calc(100% + 8px);
     left: 0;
     width: 220px;
     max-width: 90vw;
@@ -534,7 +534,7 @@ body {
     }
 
     .user-info-box span {
-        display: none; /* إخفاء اسم المستخدم في الشريط العلوي الضيق بالهاتف لتوفير المساحة وتجنب الازدحام */
+        display: none; 
     }
 
     .nav-header {
@@ -551,7 +551,8 @@ body {
 .goog-te-banner-frame.skiptranslate { display: none !important; }
 body { top: 0px !important; }
 .goog-te-gadget { font-size: 0px !important; }
-/* --- تنسيق الجملة التعريفية (App Tagline) --- */
+
+/* تنسيق الجملة التعريفية (App Tagline) */
 .app-tagline {
     font-size: 0.95rem;
     color: #64748b;
