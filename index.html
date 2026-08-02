@@ -137,13 +137,6 @@
             display: none !important;
         }
 
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
         .options-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -178,7 +171,6 @@
             font-weight: 600;
         }
 
-        /* تنسيق قائمة ترجمة جوجل العلوية */
         .google-translate-wrapper {
             position: relative;
             display: inline-block;
@@ -218,7 +210,6 @@
 </head>
 <body>
 
-    <!-- عنصر ترجمة جوجل المخفي -->
     <div id="google_translate_element"></div>
 
     <div class="container">
@@ -267,20 +258,16 @@
             </div>
         </div>
 
-        <!-- ================= تخطيط التطبيق الرئيسي (بعد الدخول) ================= -->
+        <!-- ================= تخطيط التطبيق الرئيسي ================= -->
         <div id="mainAppLayout" class="hidden">
             
-            <!-- الهيدر العلوي وأزرار التحكم -->
             <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px;">
                 <div id="userHeaderInfo" class="hidden">
                     <strong id="headerUsername" style="font-size: 1rem; color: var(--accent-color);">مرحباً</strong>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <!-- زر القائمة الشخصية والأصدقاء -->
                     <button class="option-btn" onclick="openProfileView()" style="padding: 8px 12px; font-size: 0.85rem;" title="الملف الشخصي والأصدقاء">👤 البروفايل</button>
-                    <!-- زر تبديل الثيم -->
                     <button class="option-btn" onclick="toggleTheme()" style="padding: 8px 12px; font-size: 0.85rem;" title="تغيير المظهر">🌙/☀️</button>
-                    <!-- قائمة الترجمة المنسدلة -->
                     <div class="google-translate-wrapper">
                         <button class="option-btn" onclick="toggleTranslateMenu()" style="padding: 8px 12px; font-size: 0.85rem;">🌐</button>
                         <div id="translateDropdown" class="translate-dropdown hidden">
@@ -290,12 +277,10 @@
                             <div id="languagesListBox" style="max-height: 180px; overflow-y: auto; margin-top: 4px;"></div>
                         </div>
                     </div>
-                    <!-- زر تسجيل الخروج -->
                     <button class="btn btn-danger" onclick="logout()" style="width: auto; padding: 8px 14px; font-size: 0.85rem;">خروج</button>
                 </div>
             </div>
 
-            <!-- لوحة التحكم الرئيسية -->
             <div id="mainDashboardView">
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -310,7 +295,6 @@
                     <div id="monthsGrid" class="options-grid" style="grid-template-columns: repeat(3, 1fr);"></div>
                 </div>
 
-                <!-- لوحة التقييمات السريعة -->
                 <div class="card">
                     <h2 style="margin-bottom: 12px;">📊 تقارير الأداء الشاملة</h2>
                     <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -322,7 +306,6 @@
                     </div>
                 </div>
 
-                <!-- لوحة إدارة العادات المخصصة -->
                 <div class="card">
                     <h2 style="margin-bottom: 12px;">⚙️ تخصيص وإدارة العادات</h2>
                     <div class="form-group">
@@ -374,7 +357,6 @@
                 </div>
             </div>
 
-            <!-- عرض تتبع أيام الشهر -->
             <div id="monthView" class="hidden">
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -383,7 +365,6 @@
                         <button class="btn" onclick="openFullMonthView()" style="width: auto; padding: 6px 12px; font-size: 0.8rem;">📋 عرض الشهر كاملاً</button>
                     </div>
 
-                    <!-- أزرار التنقل السريع بين الأيام -->
                     <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 10px; border-radius: 10px; margin-bottom: 15px; gap: 8px;">
                         <button class="btn" onclick="changeDay(-1)" style="width: auto; padding: 8px 14px; font-size: 0.85rem;">◀ السابق</button>
                         <div style="flex-grow: 1; text-align: center;">
@@ -394,7 +375,6 @@
 
                     <h3 id="activeDayTitle" style="text-align: center; margin-bottom: 15px; font-size: 1.05rem; color: var(--accent-color);">اليوم</h3>
                     
-                    <!-- قائمة عادات اليوم -->
                     <div id="habitsListContainer" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;"></div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-glass); padding-top: 15px;">
@@ -406,7 +386,6 @@
                 </div>
             </div>
 
-            <!-- عرض الشهر كاملاً (جدول الشهور) -->
             <div id="fullMonthView" class="hidden">
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -417,7 +396,6 @@
                 </div>
             </div>
 
-            <!-- شاشة التقييمات والأبحاث -->
             <div id="evaluationView" class="hidden">
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -429,7 +407,6 @@
                 </div>
             </div>
 
-            <!-- شاشة الملف الشخصي والأصدقاء -->
             <div id="profileView" class="hidden">
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -464,9 +441,7 @@
         </div>
     </div>
 
-    <!-- استدعاء ملف الجافاسكريبت البرمجي -->
     <script type="module" src="script.js"></script>
-    <!-- مكتبة ترجمة جوجل -->
     <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
     <script type="text/javascript">
         function googleTranslateElementInit() {
