@@ -799,3 +799,26 @@ function closeMonthReport() {
     const ratio = totalPossible > 0 ? Math.round((earnedPoints / totalPossible) * 100) : 0;
     document.getElementById('evalContentBox').innerHTML = getSmartEvaluationMessage('month', ratio, currentMonthName);
 }
+// --- ربط الدوال بالنطاق العام لتعمل الأزرار مع الـ ES Module ---
+window.toggleTheme = toggleTheme;
+window.toggleTranslateMenu = toggleTranslateMenu;
+window.filterLanguages = filterLanguages;
+window.switchAuthView = switchAuthView;
+window.handleRegister = handleRegister;
+window.handleLogin = handleLogin;
+window.logout = logout;
+window.handleScopeChange = handleScopeChange;
+window.addNewCustomHabit = addNewCustomHabit;
+window.deleteHabit = deleteHabit;
+window.addNewYear = addNewYear;
+window.openYear = openYear;
+window.openMonth = openMonth;
+window.jumpToSelectedDay = jumpToSelectedDay;
+window.changeDay = changeDay;
+window.updateHabitStatus = updateHabitStatus;
+window.goHome = goHome;
+window.openFullMonthView = openFullMonthView;
+window.updateFullMonthHabit = updateFullMonthHabit;
+window.openQuarterEvaluation = openQuarterEvaluation;
+window.openAnnualEvaluation = openAnnualEvaluation;
+window.closeMonthReport = closeMonthReport;
