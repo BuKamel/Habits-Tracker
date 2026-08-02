@@ -51,10 +51,8 @@ async function fetchUserData(userId) {
         }
     }
 
-    const habitIds = userHabits.map(h => h.id);
     let userLogs = [];
-    
-    if (habitIds.length > 0) {
+    if (userHabits.length > 0) {
         const { data: logs, error: logsError } = await supabase
           .from('habit_logs')
           .select('*')
@@ -71,18 +69,22 @@ async function fetchUserData(userId) {
   }
 }
 
-// --- حفظ حالة العادة في Supabase ---
+// --- حفظ حالة العادة في Supabase بطريقة صحيحة ---
 async function saveLogToSupabase(habitId, targetDate, status) {
   try {
     if (!currentUser) return;
+    
     const { error } = await supabase
       .from('habit_logs')
-      upsert(
+      .upsert(
         { user_id: currentUser.id, habit_id: habitId, log_date: targetDate, status: status },
-        { onConflict: ['habit_id', 'log_date'] }
+        { onConflict: 'habit_id, log_date' }
       );
 
-    if (error) throw error;
+    if (error) {
+        console.error('Supabase save error details:', error);
+        alert('خطأ في حفظ البيانات: ' + error.message);
+    }
   } catch (error) {
     console.error('Error saving log:', error.message);
   }
@@ -93,7 +95,6 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   if (session) {
     currentUser = session.user;
     
-    // جلب اسم المستخدم من جدول profiles
     const { data: profile } = await supabase
       .from('profiles')
       .select('*')
@@ -115,7 +116,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   }
 });
 
-// ================= إدارة الحسابات (تسجيل وحفظ وتسجيل خروج) =================
+// ================= إدارة الحسابات =================
 async function handleRegister() {
     const username = document.getElementById('regUser').value.trim();
     const pass1 = document.getElementById('regPass1').value;
@@ -130,7 +131,6 @@ async function handleRegister() {
         return;
     }
 
-    // توليد بريد إلكتروني افتراضي فريد بناءً على اسم المستخدم
     const fakeEmail = `${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}@bukamel.app`;
 
     const { data, error } = await supabase.auth.signUp({
@@ -144,7 +144,6 @@ async function handleRegister() {
     }
 
     if (data.user) {
-        // حفظ البروفايل في جدول profiles الجديد
         const { error: profileErr } = await supabase.from('profiles').insert({
             id: data.user.id,
             username: username,
@@ -200,15 +199,6 @@ function initAppDashboard() {
     renderMonthsGrid();
     renderAdminHabitsList();
     updateDashboardPerformance();
-}
-
-function handleScopeChange(val) {
-    const monthWrap = document.getElementById('scopeMonthWrapper');
-    const quarterWrap = document.getElementById('scopeQuarterWrapper');
-    if(monthWrap) monthWrap.classList.add('hidden');
-    if(quarterWrap) quarterWrap.classList.add('hidden');
-    if (val === 'month' && monthWrap) monthWrap.classList.remove('hidden');
-    else if (val === 'quarter' && quarterWrap) quarterWrap.classList.remove('hidden');
 }
 
 async function addNewCustomHabit() {
@@ -656,7 +646,6 @@ function toggleTheme() {
     }
 }
 
-// ربط الدوال بالنافذة العامة لتتفاعل مع الأزرار في HTML
 window.handleRegister = handleRegister;
 window.handleLogin = handleLogin;
 window.logout = logout;
