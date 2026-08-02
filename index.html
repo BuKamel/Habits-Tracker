@@ -15,6 +15,7 @@
             <span>☕</span> <strong>منصة Bu Kamel</strong>
         </div>
         
+
         <div class="header-controls">
             <!-- زر القائمة المنسدلة للترجمة -->
             <div class="google-translate-wrapper">
@@ -33,7 +34,6 @@
             <!-- معلومات المستخدم -->
             <div id="userHeaderInfo" class="hidden user-info-box">
                 <button class="btn btn-primary btn-sm" onclick="goHome()">🏠 الرئيسية</button>
-                <button class="btn btn-secondary btn-sm" onclick="openProfileView()">👤 بروفايلي</button>
                 <span id="headerUsername" style="font-weight: 700;"></span>
                 <button class="btn btn-danger btn-sm" onclick="logout()">خروج</button>
             </div>
@@ -54,6 +54,8 @@
     <!-- شاشة تسجيل الدخول -->
     <div id="loginViewContainer" class="auth-wrapper">
         <div id="loginView" class="auth-box">
+            
+            <!-- فيديو صغير ومرتب في أعلى صندوق تسجيل الدخول -->
             <div style="width: 100%; margin-bottom: 12px; text-align: center;">
                 <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-weight: bold;">شاهد فكرة الموقع في دقيقة 🎥</p>
                 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 6px;">
@@ -76,6 +78,8 @@
         </div>
 
         <div id="registerView" class="auth-box hidden">
+            
+            <!-- فيديو صغير ومرتب في أعلى صندوق إنشاء الحساب أيضاً -->
             <div style="width: 100%; margin-bottom: 12px; text-align: center;">
                 <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-weight: bold;">شاهد فكرة الموقع في دقيقة 🎥</p>
                 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 6px;">
@@ -91,8 +95,6 @@
             <p class="auth-subtitle">انضم لمنصة Bu Kamel الشخصية</p>
             <p class="app-tagline">منصتك الخاصة لتتبع العادات وبناء حياة أكثر إنتاجية وتنظيماً.</p>
             
-            <!-- تم إضافة خانة البريد الإلكتروني هنا -->
-            <input type="email" id="regEmail" class="input-field" placeholder="البريد الإلكتروني">
             <input type="text" id="regUser" class="input-field" placeholder="اسم المستخدم">
             <input type="password" id="regPass1" class="input-field" placeholder="كلمة المرور">
             <input type="password" id="regPass2" class="input-field" placeholder="تأكيد كلمة المرور">
@@ -170,48 +172,12 @@
                     <div id="actualPerformanceDisplay" class="performance-score">0%</div>
                 </div>
 
+                <!-- زر رابط الفيديو في أواخر الصفحة خالص بعد التقييم ونسبة الإنجاز -->
                 <div style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border-glass);">
                     <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px;">حابب تعرف تفاصيل أكتر عن فكرة المشروع وكيفية برمجته؟</p>
                     <a href="https://www.youtube.com/watch?v=ENRNOzTZjoQ" target="_blank" style="display: inline-block; background-color: #ff0000; color: white; padding: 7px 14px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.85rem; box-shadow: 0 2px 5px rgba(255,0,0,0.3);">
                         🔴 مشاهدة فيديو شرح المنصة على يوتيوب
                     </a>
-                </div>
-            </div>
-
-            <!-- شاشة بروفايل المستخدم وشبكة الأصدقاء -->
-            <div id="profileView" class="card hidden">
-                <div class="nav-header">
-                    <span class="nav-title">👤 صفحة البيانات الشخصية (البروفايل)</span>
-                    <button class="btn btn-secondary btn-sm" onclick="goHome()">🏠 العودة للرئيسية</button>
-                </div>
-
-                <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px;">
-                    <div class="section-block">
-                        <h3>معلوماتي الأساسية</h3>
-                        <p style="margin: 5px 0;"><strong>البريد الإلكتروني:</strong> <span id="profileEmailDisplay"></span></p>
-                        <p style="margin: 5px 0;"><strong>اسم المستخدم:</strong> <span id="profileUsernameDisplay"></span></p>
-                        <p style="margin: 5px 0;"><strong>الرقم المميز (ID):</strong> <span id="profileUniqueIdDisplay" style="color: var(--accent-color); font-weight: bold;"></span></p>
-                        
-                        <div style="margin-top: 10px;">
-                            <label style="font-weight: bold; font-size: 0.85rem;">نبذة عني (Bio):</label>
-                            <textarea id="profileBioInput" class="input-field" rows="2" placeholder="اكتب نبذة تشجيعية عن أهدافك..." style="margin-top: 5px;"></textarea>
-                            <button class="btn btn-primary btn-sm" onclick="saveProfileBio()">حفظ البايو</button>
-                        </div>
-                    </div>
-
-                    <div class="section-block">
-                        <h3>شبكة الأصدقاء والتشجيع المتبادل</h3>
-                        <p class="card-subtitle">ابحث عن أصدقائك باستخدام الرقم المميز (ID) لمتابعة أدائهم والتشجيع معا</p>
-                        
-                        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                            <input type="text" id="friendSearchInput" class="input-field" placeholder="أدخل الرقم المميز للصديق..." style="margin-bottom: 0;">
-                            <button class="btn btn-primary" onclick="searchAndAddFriend()">إضافة صديق</button>
-                        </div>
-
-                        <div id="friendsListContainer" style="display: flex; flex-direction: column; gap: 10px;">
-                            <!-- قائمة الأصدقاء تظهر هنا -->
-                        </div>
-                    </div>
                 </div>
             </div>
 
