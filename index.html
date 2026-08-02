@@ -51,7 +51,7 @@
         "الاستمرارية والخطوات الصغيرة اليومية تصنع مستقبلاً عظيماً!" ☕✨
     </div>
 
-    <!-- شاشة تسجيل الدخول -->
+    <!-- شاشة تسجيل الدخول (بالبريد الإلكتروني) -->
     <div id="loginViewContainer" class="auth-wrapper">
         <div id="loginView" class="auth-box">
             
@@ -59,7 +59,7 @@
                 <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-weight: bold;">شاهد فكرة الموقع في دقيقة 🎥</p>
                 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 6px;">
                     <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" 
-                        src="https://www.youtube.com/embed/ENRNOzTZjoQ" 
+                        src="https://www.youtube.com/embed/ENRNOzjoQ" 
                         title="شرح موقع تتبع العادات" 
                         allowfullscreen>
                     </iframe>
@@ -67,9 +67,9 @@
             </div>
 
             <h2>تسجيل الدخول</h2>
-            <p class="auth-subtitle">أدخل بيانات حسابك للمتابعة</p>
+            <p class="auth-subtitle">أدخل بريدك الإلكتروني وكلمة المرور للمتابعة</p>
             
-            <input type="text" id="loginUser" class="input-field" placeholder="اسم المستخدم">
+            <input type="email" id="loginEmail" class="input-field" placeholder="البريد الإلكتروني">
             <input type="password" id="loginPass" class="input-field" placeholder="كلمة المرور">
             <button class="btn btn-primary full-width" onclick="handleLogin()">دخول</button>
             <p class="auth-switch-text">ليس لديك حساب؟ <a href="#" onclick="switchAuthView('register')">إنشاء حساب جديد</a></p>
@@ -81,7 +81,7 @@
                 <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-weight: bold;">شاهد فكرة الموقع في دقيقة 🎥</p>
                 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 6px;">
                     <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" 
-                        src="https://www.youtube.com/embed/ENRNOzTZjoQ" 
+                        src="https://www.youtube.com/embed/ENRNOzjoQ" 
                         title="شرح موقع تتبع العادات" 
                         allowfullscreen>
                     </iframe>
@@ -91,8 +91,8 @@
             <h2>إنشاء حساب جديد</h2>
             <p class="auth-subtitle">انضم لمنصة Bu Kamel الشخصية</p>
             
-            <input type="email" id="regEmail" class="input-field" placeholder="البريد الإلكتروني (سري ولا يظهر لأحد)">
-            <input type="text" id="regUser" class="input-field" placeholder="اسم المستخدم">
+            <input type="email" id="regEmail" class="input-field" placeholder="البريد الإلكتروني (للدخول ولن يظهر لأحد)">
+            <input type="text" id="regUser" class="input-field" placeholder="اسم المستخدم (للتعريف داخل حسابك)">
             <input type="password" id="regPass1" class="input-field" placeholder="كلمة المرور">
             <input type="password" id="regPass2" class="input-field" placeholder="تأكيد كلمة المرور">
             <button class="btn btn-primary full-width" onclick="handleRegister()">تسجيل الحساب</button>
@@ -172,7 +172,7 @@
                 </div>
             </div>
 
-            <!-- شاشة الملف الشخصي (Profile) - تظهر البريد لصاحب الحساب فقط وتخفيه عن الأصدقاء -->
+            <!-- شاشة الملف الشخصي (Profile) -->
             <div id="profileView" class="card hidden">
                 <div class="nav-header">
                     <span class="nav-title">👤 صفحة الملف الشخصي (بياناتي)</span>
@@ -204,10 +204,10 @@
                         </div>
                     </div>
 
-                    <!-- قائمة الأصدقاء (تخلو تماماً من أي بريد أو معلومات اتصال خاصة بهم) -->
+                    <!-- قائمة الأصدقاء -->
                     <div class="card" style="background: var(--bg-main);">
                         <h3>👥 شبكة الأصدقاء (التشجيع المشترك)</h3>
-                        <p class="card-subtitle">شاهد أداء أصدقائك اليومي لتحفيز بعضكم البعض بانتظام (مع الحفاظ التام على خصوصيتك وعدم ظهور بريدك لهم)</p>
+                        <p class="card-subtitle">شاهد أداء أصدقائك اليومي لتحفيز بعضكم البعض بانتظام (مع الحفاظ التام على خصوصيتك)</p>
                         <div id="friendsListContainer" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;"></div>
                     </div>
                 </div>
@@ -262,216 +262,6 @@
         </section>
     </main>
 
-    <div id="google_translate_element" style="display:none;"></div>
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'ar',
-                includedLanguages: 'ar,en,fr,es,de,it,tr,ur,hi,zh-CN,ja,ru,fa,id',
-                autoDisplay: false
-            }, 'google_translate_element');
-        }
-    </script>
-    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-    <script src="script.js"></script>
-</body>
-</html>                <span id="headerUsername" style="font-weight: 700;"></span>
-                <button class="btn btn-danger btn-sm" onclick="logout()">خروج</button>
-            </div>
-        </div>
-    </header>
-
-    <!-- شريط اليوتيوب -->
-    <div class="channel-bar">
-        <span>تابع محتوانا على يوتيوب للتنمية الذاتية والتكنولوجيا:</span>
-        <a href="https://www.youtube.com/@BuKamel-R2A" target="_blank">قناة يوتيوب Bu Kamel 🚀</a>
-    </div>
-
-    <!-- شريط التحفيز -->
-    <div class="motivation-banner">
-        "الاستمرارية والخطوات الصغيرة اليومية تصنع مستقبلاً عظيماً!" ☕✨
-    </div>
-
-    <!-- شاشة تسجيل الدخول -->
-    <div id="loginViewContainer" class="auth-wrapper">
-        <div id="loginView" class="auth-box">
-            
-            <!-- فيديو صغير ومرتب في أعلى صندوق تسجيل الدخول -->
-            <div style="width: 100%; margin-bottom: 12px; text-align: center;">
-                <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-weight: bold;">شاهد فكرة الموقع في دقيقة 🎥</p>
-                <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 6px;">
-                    <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" 
-                        src="https://www.youtube.com/embed/ENRNOzTZjoQ" 
-                        title="شرح موقع تتبع العادات" 
-                        allowfullscreen>
-                    </iframe>
-                </div>
-            </div>
-
-            <h2>تسجيل الدخول</h2>
-            <p class="auth-subtitle">أدخل بيانات حسابك للمتابعة</p>
-            <p class="app-tagline">نظم يومك، ابنِ عادات إيجابية مستدامة، وتابع إنجازاتك خطوة بخطوة بكل مرونة.</p>
-            
-            <input type="text" id="loginUser" class="input-field" placeholder="اسم المستخدم">
-            <input type="password" id="loginPass" class="input-field" placeholder="كلمة المرور">
-            <button class="btn btn-primary full-width" onclick="handleLogin()">دخول</button>
-            <p class="auth-switch-text">ليس لديك حساب؟ <a href="#" onclick="switchAuthView('register')">إنشاء حساب جديد</a></p>
-        </div>
-
-        <div id="registerView" class="auth-box hidden">
-            
-            <!-- فيديو صغير ومرتب في أعلى صندوق إنشاء الحساب أيضاً -->
-            <div style="width: 100%; margin-bottom: 12px; text-align: center;">
-                <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px; font-weight: bold;">شاهد فكرة الموقع في دقيقة 🎥</p>
-                <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 6px;">
-                    <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" 
-                        src="https://www.youtube.com/embed/ENRNOzTZjoQ" 
-                        title="شرح موقع تتبع العادات" 
-                        allowfullscreen>
-                    </iframe>
-                </div>
-            </div>
-
-            <h2>إنشاء حساب جديد</h2>
-            <p class="auth-subtitle">انضم لمنصة Bu Kamel الشخصية</p>
-            <p class="app-tagline">منصتك الخاصة لتتبع العادات وبناء حياة أكثر إنتاجية وتنظيماً.</p>
-            
-            <input type="text" id="regUser" class="input-field" placeholder="اسم المستخدم">
-            <input type="password" id="regPass1" class="input-field" placeholder="كلمة المرور">
-            <input type="password" id="regPass2" class="input-field" placeholder="تأكيد كلمة المرور">
-            <button class="btn btn-primary full-width" onclick="handleRegister()">تسجيل الحساب</button>
-            <p class="auth-switch-text">لديك حساب بالفعل؟ <a href="#" onclick="switchAuthView('login')">تسجيل الدخول</a></p>
-        </div>
-    </div>
-
-    <!-- تخطيط التطبيق الرئيسي -->
-    <main id="mainAppLayout" class="main-layout hidden">
-        <aside class="sidebar-years">
-            <h3>أعوام المتابعة</h3>
-            <p class="sidebar-desc">اختر السنة أو أضف سنة جديدة</p>
-            <div id="sidebarYearsList" class="years-list"></div>
-            <button class="btn btn-success full-width" style="margin-top: 15px;" onclick="addNewYear()">➕ فتح سنة جديدة</button>
-        </aside>
-
-        <section class="content-area">
-            <div id="mainDashboardView" class="card">
-                <h3>شهور السنة</h3>
-                <p class="card-subtitle">اختر الشهر للبدء في تخصيص ومتابعة عاداتك اليومية</p>
-                <div id="monthsGrid" class="grid-options" style="margin-bottom: 20px;"></div>
-
-                <div class="section-block" style="margin-top: 20px;">
-                    <h3>إدارة عاداتك المخصصة</h3>
-                    <p class="card-subtitle">أضف عادات جديدة وحدد نطاق ظهورها</p>
-                    
-                    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
-                        <input type="text" id="newHabitName" class="input-field" placeholder="اسم العادة (مثلاً: قراءة كتاب)">
-                        <input type="text" id="newHabitIcon" class="input-field" placeholder="أيقونة تعبيرية (مثلاً: 📚)">
-                        
-                        <select id="habitScopeType" class="status-select" onchange="handleScopeChange(this.value)">
-                            <option value="year">طوال السنة (تظهر كل الشهور)</option>
-                            <option value="month">شهر محدد فقط</option>
-                            <option value="quarter">ربع سنة محدد (Q1, Q2, Q3, Q4)</option>
-                        </select>
-
-                        <div id="scopeMonthWrapper" class="hidden">
-                            <select id="habitTargetMonth" class="status-select full-width">
-                                <option value="0">يناير</option><option value="1">فبراير</option><option value="2">مارس</option>
-                                <option value="3">إبريل</option><option value="4">مايو</option><option value="5">يونيو</option>
-                                <option value="6">يوليو</option><option value="7">أغسطس</option><option value="8">سبتمبر</option>
-                                <option value="9">أكتوبر</option><option value="10">نوفمبر</option><option value="11">ديسمبر</option>
-                            </select>
-                        </div>
-
-                        <div id="scopeQuarterWrapper" class="hidden">
-                            <select id="habitTargetQuarter" class="status-select full-width">
-                                <option value="Q1">الربع الأول (يناير - مارس)</option>
-                                <option value="Q2">الربع الثاني (إبريل - يونيو)</option>
-                                <option value="Q3">الربع الثالث (يوليو - سبتمبر)</option>
-                                <option value="Q4">الربع الرابع (أكتوبر - ديسمبر)</option>
-                            </select>
-                        </div>
-
-                        <button class="btn btn-primary" onclick="addNewCustomHabit()">إضافة العادة الجديدة</button>
-                    </div>
-
-                    <div id="currentHabitsListAdmin" style="display: flex; flex-direction: column; gap: 8px;"></div>
-                </div>
-
-                <div class="section-block" style="margin-top: 20px;">
-                    <h3>تقارير الأداء الشاملة</h3>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
-                        <button class="btn btn-secondary" onclick="openQuarterEvaluation('الربع الأول (Q1)', [1, 2, 3])">تقرير Q1</button>
-                        <button class="btn btn-secondary" onclick="openQuarterEvaluation('الربع الثاني (Q2)', [4, 5, 6])">تقرير Q2</button>
-                        <button class="btn btn-secondary" onclick="openQuarterEvaluation('الربع الثالث (Q3)', [7, 8, 9])">تقرير Q3</button>
-                        <button class="btn btn-secondary" onclick="openQuarterEvaluation('الربع الرابع (Q4)', [10, 11, 12])">تقرير Q4</button>
-                        <button class="btn btn-primary" onclick="openAnnualEvaluation()">التقرير السنوي الشامل 🏆</button>
-                    </div>
-                </div>
-
-                <div class="card" style="margin-top: 20px; text-align: center;">
-                    <h3>نسبة الإنجاز العامة</h3>
-                    <div id="actualPerformanceDisplay" class="performance-score">0%</div>
-                </div>
-
-                <!-- زر رابط الفيديو في أواخر الصفحة خالص بعد التقييم ونسبة الإنجاز -->
-                <div style="text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid var(--border-glass);">
-                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px;">حابب تعرف تفاصيل أكتر عن فكرة المشروع وكيفية برمجته؟</p>
-                    <a href="https://www.youtube.com/watch?v=ENRNOzTZjoQ" target="_blank" style="display: inline-block; background-color: #ff0000; color: white; padding: 7px 14px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.85rem; box-shadow: 0 2px 5px rgba(255,0,0,0.3);">
-                        🔴 مشاهدة فيديو شرح المنصة على يوتيوب
-                    </a>
-                </div>
-            </div>
-
-            <!-- شاشة متابعة الشهر اليومي -->
-            <div id="monthView" class="card hidden">
-                <div class="nav-header">
-                    <span id="activeMonthTitle" class="nav-title">تتبع العادات</span>
-                    <div class="nav-actions">
-                        <button class="btn btn-secondary btn-sm" onclick="openFullMonthView()">📋 تعديل الشهر كاملاً</button>
-                        <button class="btn btn-primary btn-sm" onclick="closeMonthReport()">📊 تقرير وإغلاق الشهر</button>
-                        <button class="btn btn-secondary btn-sm" onclick="goHome()">🏠 لوحة التحكم</button>
-                    </div>
-                </div>
-
-                <div class="jump-card" style="margin: 15px 0; background: var(--bg-main); padding: 12px; border-radius: 12px; border: 1px solid var(--border-glass);">
-                    <span class="jump-label">⚡ الانتقال السريع:</span>
-                    <select id="quickDayDropdown" class="status-select" onchange="jumpToSelectedDay(this.value)"></select>
-                </div>
-
-                <div class="day-card">
-                    <div class="day-nav-header">
-                        <button class="btn btn-secondary btn-sm" onclick="changeDay(-1)">▶ اليوم السابق</button>
-                        <h3 id="activeDayTitle" style="color: var(--accent-color);">اليوم</h3>
-                        <button class="btn btn-secondary btn-sm" onclick="changeDay(1)">اليوم التالي ◀</button>
-                    </div>
-                    <div id="habitsListContainer" style="display: flex; flex-direction: column; gap: 10px;"></div>
-                </div>
-            </div>
-
-            <!-- شاشة تعديل الشهر كاملاً -->
-            <div id="fullMonthView" class="card hidden">
-                <div class="nav-header">
-                    <span id="fullMonthHeaderTitle" class="nav-title">تعديل الشهر كاملاً</span>
-                    <button class="btn btn-secondary btn-sm" onclick="openMonth(currentMonth, currentMonthName)">⬅ العودة للتتبع اليومي</button>
-                </div>
-                <div id="fullMonthContentContainer" class="full-month-scroll" style="margin-top: 15px;"></div>
-            </div>
-
-            <!-- شاشة التقارير والتقييمات -->
-            <div id="evaluationView" class="card hidden">
-                <div class="nav-header">
-                    <span id="evalHeaderTitle" class="nav-title">تقرير الأداء</span>
-                    <button class="btn btn-secondary btn-sm" onclick="goHome()">🏠 العودة للرئيسية</button>
-                </div>
-                <div class="eval-card">
-                    <h3 id="evalTitleBox" style="color: var(--accent-color); font-size: 1.4rem; margin-bottom: 15px;"></h3>
-                    <div id="evalContentBox" class="eval-content"></div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- عناصر ترجمة جوجل المخفية والسكربتات -->
     <div id="google_translate_element" style="display:none;"></div>
     <script type="text/javascript">
         function googleTranslateElementInit() {
