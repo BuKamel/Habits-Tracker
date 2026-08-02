@@ -1,3 +1,7 @@
+const SUPABASE_URL = 'https://kbzwqdjgkazeeqzdefdj.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_zDvbuvDMb5qbjrui3EHwiQ_K0bcRfSO';
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 let currentUser = null;
 let currentYear = 2026;
 let currentMonth = 6;
@@ -17,12 +21,26 @@ const defaultHabits = [
 
 let availableYears = JSON.parse(localStorage.getItem('bu_kamel_years')) || [2023, 2024, 2025, 2026];
 
-let db = JSON.parse(localStorage.getItem('bu_kamel_db')) || {
-    users: []
-};
+async function saveDatabase() {
+    if (!currentUser || !currentUser.username) return;
 
-function saveDatabase() {
-    localStorage.setItem('bu_kamel_db', JSON.stringify(db));
+    try {
+        const { error } = await _supabase
+            .from('profiles')
+            .update({
+                custom_habits: currentUser.custom_habits,
+                app_data: currentUser.data
+            })
+            .eq('username', currentUser.username);
+
+        if (error) {
+            console.error('Error saving data:', error.message);
+        } else {
+            console.log('تم الحفظ في الجدولين بنجاح 🚀');
+        }
+    } catch (err) {
+        console.error('Exception during save:', err);
+    }
 }
 
 function playSound(type) {
@@ -142,7 +160,7 @@ window.addEventListener('click', function(e) {
 });
 // ==========================================================
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
     const savedTheme = localStorage.getItem('bu_kamel_theme');
     if (savedTheme === 'dark') {
         document.getElementById('htmlRoot').setAttribute('data-theme', 'dark');
@@ -150,13 +168,20 @@ window.addEventListener('DOMContentLoaded', () => {
     
     const activeSession = localStorage.getItem('bu_kamel_active_user');
     if (activeSession) {
-        const found = db.users.find(u => u.username === activeSession);
-        if (found) {
-            currentUser = found;
-            if (!currentUser.customHabits) {
-                currentUser.customHabits = JSON.parse(JSON.stringify(defaultHabits));
+        try {
+            const { data: users, error } = await _supabase
+                .from('profiles')
+                .select('*')
+                .eq('username', activeSession);
+
+            if (!error && users && users.length > 0) {
+                currentUser = users[0];
+                currentUser.custom_habits = currentUser.custom_habits || JSON.parse(JSON.stringify(defaultHabits));
+                currentUser.data = currentUser.app_data || {};
+                initAppDashboard();
             }
-            initAppDashboard();
+        } catch (e) {
+            console.error("Session restore error:", e);
         }
     }
 });
@@ -171,7 +196,7 @@ function switchAuthView(viewType) {
     }
 }
 
-function handleRegister() {
+async function handleRegister() {
     const username = document.getElementById('regUser').value.trim();
     const pass1 = document.getElementById('regPass1').value;
     const pass2 = document.getElementById('regPass2').value;
@@ -185,39 +210,81 @@ function handleRegister() {
         return;
     }
 
-    const existingUser = db.users.find(u => u.username.toLowerCase() === username.toLowerCase());
-    if (existingUser) {
-        alert('⚠️ اسم المستخدم موجود مسبقاً!');
-        return;
-    }
+    try {
+        const { data: existingUsers, error: fetchError } = await _supabase
+            .from('profiles')
+            .select('*')
+            .ilike('username', username);
 
-    db.users.push({
-        username: username,
-        pass: pass1,
-        data: {},
-        customHabits: JSON.parse(JSON.stringify(defaultHabits))
-    });
-    saveDatabase();
-    alert(`تم إنشاء الحساب بنجاح يا ${username}!`);
-    switchAuthView('login');
+        if (fetchError) throw fetchError;
+
+        if (existingUsers && existingUsers.length > 0) {
+            alert('⚠️ اسم المستخدم موجود مسبقاً!');
+            return;
+        }
+
+        const newUserObj = {
+            username: username,
+            pass: pass1,
+            custom_habits: defaultHabits,
+            app_data: {}
+        };
+
+        const { error: insertError } = await _supabase
+            .from('profiles')
+            .insert([newUserObj]);
+
+        if (insertError) throw insertError;
+
+        alert(`تم إنشاء الحساب بنجاح يا ${username}!`);
+        switchAuthView('login');
+
+    } catch (err) {
+        console.error('Error during registration:', err.message);
+        alert('حدث خطأ أثناء الاتصال بقاعدة البيانات السحابية!');
+    }
 }
 
-function handleLogin() {
+async function handleLogin() {
     const uInput = document.getElementById('loginUser').value.trim();
     const pInput = document.getElementById('loginPass').value;
 
-    const user = db.users.find(u => u.username === uInput && u.pass === pInput);
-    if (!user) {
-        alert('اسم المستخدم أو كلمة المرور غير صحيحة!');
+    if (!uInput || !pInput) {
+        alert('الرجاء إدخال اسم المستخدم وكلمة المرور!');
         return;
     }
 
-    currentUser = user;
-    if (!currentUser.customHabits) {
-        currentUser.customHabits = JSON.parse(JSON.stringify(defaultHabits));
+    try {
+        const { data: users, error } = await _supabase
+            .from('profiles')
+            .select('*')
+            .eq('username', uInput)
+            .eq('pass', pInput);
+
+        if (error) throw error;
+
+        if (!users || users.length === 0) {
+            alert('اسم المستخدم أو كلمة المرور غير صحيحة!');
+            return;
+        }
+
+        currentUser = users[0];
+        
+        if (!currentUser.custom_habits) {
+            currentUser.custom_habits = JSON.parse(JSON.stringify(defaultHabits));
+        }
+        if (!currentUser.app_data) {
+            currentUser.app_data = {};
+        }
+        currentUser.data = currentUser.app_data;
+
+        localStorage.setItem('bu_kamel_active_user', currentUser.username);
+        initAppDashboard();
+
+    } catch (err) {
+        console.error('Error during login:', err.message);
+        alert('حدث خطأ أثناء تسجيل الدخول!');
     }
-    localStorage.setItem('bu_kamel_active_user', user.username);
-    initAppDashboard();
 }
 
 function logout() {
@@ -265,7 +332,7 @@ function addNewCustomHabit() {
     if (scopeType === 'month') scopeVal = `month_${document.getElementById('habitTargetMonth').value}`;
     else if (scopeType === 'quarter') scopeVal = document.getElementById('habitTargetQuarter').value;
 
-    currentUser.customHabits.push({
+    currentUser.custom_habits.push({
         id: 'habit_' + Date.now(),
         name: name,
         icon: icon,
@@ -281,7 +348,7 @@ function addNewCustomHabit() {
 
 function deleteHabit(habitId) {
     if (confirm('هل أنت متأكد من حذف هذه العادة؟')) {
-        currentUser.customHabits = currentUser.customHabits.filter(h => h.id !== habitId);
+        currentUser.custom_habits = currentUser.custom_habits.filter(h => h.id !== habitId);
         saveDatabase();
         renderAdminHabitsList();
         updateDashboardPerformance();
@@ -293,7 +360,7 @@ function renderAdminHabitsList() {
     if (!container) return;
     container.innerHTML = '';
 
-    currentUser.customHabits.forEach(habit => {
+    currentUser.custom_habits.forEach(habit => {
         let scopeDesc = 'طوال السنة';
         if (habit.scope.startsWith('month_')) {
             const mNames = ["يناير", "فبراير", "مارس", "إبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
@@ -317,7 +384,7 @@ function renderAdminHabitsList() {
 }
 
 function getActiveHabitsForCurrentMonth() {
-    return currentUser.customHabits.filter(habit => {
+    return currentUser.custom_habits.filter(habit => {
         if (habit.scope === 'year') return true;
         if (habit.scope.startsWith('month_')) {
             return parseInt(habit.scope.split('_')[1]) === currentMonth;
@@ -402,15 +469,14 @@ function openMonth(monthIndex, monthName) {
     currentMonth = monthIndex;
     currentMonthName = monthName;
 
-    // الفتح التلقائي على اليوم الحالي إذا كانت السنة والشهر يتطابقان مع وقت النظام الحالي
     const today = new Date();
     if (currentYear === today.getFullYear() && currentMonth === today.getMonth()) {
-        currentDayIndex = today.getDate() - 1; // الأيام تبدأ من 0 في الـ Index
+        currentDayIndex = today.getDate() - 1;
         const maxDays = new Date(currentYear, currentMonth + 1, 0).getDate();
         if (currentDayIndex >= maxDays) currentDayIndex = maxDays - 1;
         if (currentDayIndex < 0) currentDayIndex = 0;
     } else {
-        currentDayIndex = 0; // افتراضي أول يوم للشهر القديم أو المستقبلي
+        currentDayIndex = 0;
     }
 
     document.getElementById('mainDashboardView').classList.add('hidden');
@@ -579,9 +645,7 @@ function updateFullMonthHabit(dayIdx, habitId, status) {
     else playSound('clear');
 }
 
-// ================= مولد الرسائل الذكية والمتنوعة حسب النسبة ونوع التقرير =================
 function getSmartEvaluationMessage(type, ratio, name) {
-    // 1. أكثر من 90% (يتروق عليه بمديح استثنائي)
     if (ratio > 90) {
         if (type === 'month') {
             return `إنجاز أسطوري في شهر <strong>${name}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 👑🔥\n\nيا سلام عليك يا بطل! أنت كدة "تروّق" على أصولها.. التزام حديدي وعزيمة لا تذبل، استمر في هذا المستوى المرعب من الانضباط!`;
@@ -590,9 +654,7 @@ function getSmartEvaluationMessage(type, ratio, name) {
         } else {
             return `التقرير السنوي الأسطوري لعام <strong>${currentYear}</strong> بنسبة إنجاز <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 🌟👑\n\nسنة كاملة من المجد والالتزام الخارق! لقد أبدعت حقاً وصنعت مستقبلاً عظيماً، استمتع بثمرة هذا العطاء الضخم!`;
         }
-    }
-    // 2. من 75% إلى 90% (تحفيز قوي ودفع للأمام)
-    else if (ratio >= 75) {
+    } else if (ratio >= 75) {
         if (type === 'month') {
             return `أداء ممتاز ومبهر لشهر <strong>${name}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>! 💪✨\n\nأنت في منطقة الأبطال! دفعة صغيرة وتصل للقمة المطلقة، واصل هذا السير الثابت ولا تتراجع أبداً!`;
         } else if (type === 'quarter') {
@@ -600,9 +662,7 @@ function getSmartEvaluationMessage(type, ratio, name) {
         } else {
             return `حصاد سنوي مشرف جداً لعام <strong>${currentYear}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>! 📈🌟\n\nعام مليء بالإنجازات والتقدم الحقيقي، أنت تسير بخطى واثقة نحو نسخة أفضل منك دائماً!`;
         }
-    }
-    // 3. من 45% إلى 74% (تشجيع متوازن وتوعية)
-    else if (ratio >= 45) {
+    } else if (ratio >= 45) {
         if (type === 'month') {
             return `أداء مقبول لشهر <strong>${name}</strong> بنسبة <span style="color: var(--accent-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>. ☕⚠️\n\nبداية جيدة لكنها لا تليق بطموحاتك! عندك طاقة أكبر بكتير، نظم وقتك وشد الهمة في الشاي القادم!`;
         } else if (type === 'quarter') {
@@ -610,9 +670,7 @@ function getSmartEvaluationMessage(type, ratio, name) {
         } else {
             return `التقرير السنوي لعام <strong>${currentYear}</strong> بلغ <span style="color: var(--accent-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>. 📉⚖️\n\nسنة فيها وعليها.. أظهرت التزاماً في أوقات وتراجعاً في أوقات أخرى. القادم يحتاج تركيزاً أعمق!`;
         }
-    }
-    // 4. أقل من 45% (زعل محب وتحفيز يوقظ الهمة)
-    else {
+    } else {
         if (type === 'month') {
             return `أنا زعلان منك بصراحة! نسبة إنجاز شهر <strong>${name}</strong> نزلت إلى <span style="color: var(--danger-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 🛑❌\n\nفين العزيمة؟ فين التخطي والالتزام؟ عاداتك الرائعة تنتظرك، استيقظ وفض الغبار عن همتك لأنك تقدر تعمل أفضل من كده بكتير!`;
         } else if (type === 'quarter') {
@@ -622,7 +680,6 @@ function getSmartEvaluationMessage(type, ratio, name) {
         }
     }
 }
-// ==================================================================================
 
 function openQuarterEvaluation(title, monthsArray) {
     document.getElementById('mainDashboardView').classList.add('hidden');
@@ -640,7 +697,7 @@ function openQuarterEvaluation(title, monthsArray) {
         const mAdjusted = mIdx - 1;
         const daysCount = new Date(currentYear, mAdjusted + 1, 0).getDate();
         
-        const monthActiveHabits = currentUser.customHabits.filter(habit => {
+        const monthActiveHabits = currentUser.custom_habits.filter(habit => {
             if (habit.scope === 'year') return true;
             if (habit.scope.startsWith('month_')) return parseInt(habit.scope.split('_')[1]) === mAdjusted;
             if (['Q1', 'Q2', 'Q3', 'Q4'].includes(habit.scope)) {
@@ -680,7 +737,7 @@ function openAnnualEvaluation() {
 
     for (let m = 0; m < 12; m++) {
         const daysCount = new Date(currentYear, m + 1, 0).getDate();
-        const monthActiveHabits = currentUser.customHabits.filter(habit => {
+        const monthActiveHabits = currentUser.custom_habits.filter(habit => {
             if (habit.scope === 'year') return true;
             if (habit.scope.startsWith('month_')) return parseInt(habit.scope.split('_')[1]) === m;
             if (['Q1', 'Q2', 'Q3', 'Q4'].includes(habit.scope)) {
