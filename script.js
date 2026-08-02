@@ -5,6 +5,51 @@ const SUPABASE_URL = 'https://xqonshwjiojmuojzwkihd.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_G-tmLaiO0_WgsR4Wyyk7-Q_WwX7lQKw'
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+// --- دالة جلب بيانات المستخدم وعاداته من Supabase ---
+async function fetchUserData(userId) {
+  try {
+    // 1. جلب العادات الخاصة بالمستخدم
+    const { data: habits, error: habitsError } = await supabase
+      .from('habits')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (habitsError) throw habitsError;
+
+    // 2. جلب سجلات الإنجاز الخاصة بعادات المستخدم
+    const habitIds = habits.map(h => h.id);
+    if (habitIds.length === 0) return { habits: [], logs: [] };
+
+    const { data: logs, error: logsError } = await supabase
+      .from('habit_logs')
+      .select('*')
+      .in('habit_id', habitIds);
+
+    if (logsError) throw logsError;
+
+    return { habits, logs };
+  } catch (error) {
+    console.error('Error fetching data from Supabase:', error.message);
+    return null;
+  }
+}
+
+// --- دالة حفظ أو تحديث حالة الإنجاز في السحابة ---
+async function toggleHabitLogSupabase(habitId, completedDate, status) {
+  try {
+    const { data, error } = await supabase
+      .from('habit_logs')
+      .upsert(
+        { habit_id: habitId, completed_date: completedDate, status: status },
+        { onConflict: ['habit_id', 'completed_date'] }
+      );
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error saving log to Supabase:', error.message);
+  }
+}
 let currentUser = null;
 let currentYear = 2026;
 let currentMonth = 6;
