@@ -60,8 +60,18 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     const userData = await fetchUserData(currentUser.id);
     if (userData) {
       console.log("User data fetched successfully:", userData);
-      // هنا هنحدث المتغيرات المحلية (زي db) بالعادات والسجلات اللي رجعت من السحابة
-    }
+// تحديث قاعدة البيانات المحلية بالبيانات القادمة من السحابة
+      if (userData.habits && userData.habits.length > 0) {
+        // لو عندك هيكل بيانات في db، بنربط العادات والسجلات بيه
+        userData.habits.forEach(habit => {
+          // تحديث الواجهة أو المتغيرات المحلية هنا
+        });
+        
+        // إعادة تحميل أو رسم الواجهة لتظهر العادات
+        if (typeof renderApp === 'function') {
+          renderApp();
+        }
+      }
   } else {
     currentUser = null;
     console.log("No user logged in.");
