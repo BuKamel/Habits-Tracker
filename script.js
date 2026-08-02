@@ -1,6 +1,5 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
-// --- إعدادات Supabase ---
 const SUPABASE_URL = 'https://xqonshwjiojmuojzwkihd.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_G-tmLaiO0_WgsR4Wyyk7-Q_WwX7lQKw'
 
@@ -13,19 +12,19 @@ let currentMonthName = "يوليو";
 let currentDayIndex = 0;
 
 const defaultHabits = [
-    { id: 'fajr', name: 'صلاة الفجر', icon: '🌅', scope: 'year' },
-    { id: 'duha', name: 'صلاة الضحى', icon: '☀️', scope: 'year' },
-    { id: 'teeth', name: 'غسيل الأسنان', icon: '🪥', scope: 'year' },
-    { id: 'dhuhr', name: 'صلاة الظهر', icon: '🕌', scope: 'year' },
-    { id: 'asr', name: 'صلاة العصر', icon: '🕌', scope: 'year' },
-    { id: 'maghrib', name: 'صلاة المغرب', icon: '🌅', scope: 'year' },
-    { id: 'isha', name: 'صلاة العشاء', icon: '🌙', scope: 'year' },
-    { id: 'quran', name: 'الورد اليومي (قرآن/قراءة)', icon: '📖', scope: 'year' }
+    { name: 'صلاة الفجر', icon: '🌅' },
+    { name: 'صلاة الضحى', icon: '☀️' },
+    { name: 'غسيل الأسنان', icon: '🪥' },
+    { name: 'صلاة الظهر', icon: '🕌' },
+    { name: 'صلاة العصر', icon: '🕌' },
+    { name: 'صلاة المغرب', icon: '🌅' },
+    { name: 'صلاة العشاء', icon: '🌙' },
+    { name: 'الورد اليومي (قرآن/قراءة)', icon: '📖' }
 ];
 
 let availableYears = [2023, 2024, 2025, 2026];
 
-// --- دالة جلب بيانات المستخدم وعاداته من Supabase ---
+// --- جلب بيانات المستخدم والعادات والسجلات ---
 async function fetchUserData(userId) {
   try {
     const { data: habits, error: habitsError } = await supabase
@@ -36,63 +35,65 @@ async function fetchUserData(userId) {
     if (habitsError) throw habitsError;
 
     let userHabits = habits;
-    // إذا لم يكن لديه عادات مسجلة بعد، ننشئ له العادات الافتراضية
+    
+    // إذا كان الحساب جديداً ولا توجد عادات، ننشئ له العادات الافتراضية تلقائياً
     if (!userHabits || userHabits.length === 0) {
         userHabits = [];
         for (const defHabit of defaultHabits) {
             const { data: insertedHabit, error: insErr } = await supabase
                 .from('habits')
-                .insert({ user_id: userId, habit_name: defHabit.name, habit_icon: defHabit.icon })
+                .insert({ user_id: userId, habit_name: defHabit.name, habit_icon: defHabit.icon, scope: 'year' })
                 .select()
                 .single();
             if (!insErr && insertedHabit) {
-                userHabits.push({ id: insertedHabit.id, name: insertedHabit.habit_name, icon: insertedHabit.habit_icon, scope: 'year' });
+                userHabits.push({ id: insertedHabit.id, name: insertedHabit.habit_name, icon: insertedHabit.habit_icon, scope: insertedHabit.scope });
             }
         }
     }
 
     const habitIds = userHabits.map(h => h.id);
-    if (habitIds.length === 0) return { habits: userHabits, logs: [] };
+    let userLogs = [];
+    
+    if (habitIds.length > 0) {
+        const { data: logs, error: logsError } = await supabase
+          .from('habit_logs')
+          .select('*')
+          .eq('user_id', userId);
 
-    const { data: logs, error: logsError } = await supabase
-      .from('habit_logs')
-      .select('*')
-      .in('habit_id', habitIds);
+        if (logsError) throw logsError;
+        userLogs = logs || [];
+    }
 
-    if (logsError) throw logsError;
-
-    return { habits: userHabits, logs: logs || [] };
+    return { habits: userHabits, logs: userLogs };
   } catch (error) {
-    console.error('Error fetching data from Supabase:', error.message);
+    console.error('Error fetching user data:', error.message);
     return null;
   }
 }
 
-// --- دالة حفظ أو تحديث حالة الإنجاز في السحابة ---
-async function toggleHabitLogSupabase(habitId, completedDate, status) {
+// --- حفظ حالة العادة في Supabase ---
+async function saveLogToSupabase(habitId, targetDate, status) {
   try {
     if (!currentUser) return;
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('habit_logs')
-      .upsert(
-        { user_id: currentUser.id, habit_id: habitId, log_date: completedDate, status: status },
+      upsert(
+        { user_id: currentUser.id, habit_id: habitId, log_date: targetDate, status: status },
         { onConflict: ['habit_id', 'log_date'] }
       );
 
     if (error) throw error;
-    return data;
   } catch (error) {
-    console.error('Error saving log to Supabase:', error.message);
+    console.error('Error saving log:', error.message);
   }
 }
 
-// --- مراقبة حالة تسجيل الدخول ---
+// --- مراقبة حالة الجلسة وتسجيل الدخول ---
 supabase.auth.onAuthStateChange(async (event, session) => {
   if (session) {
     currentUser = session.user;
-    console.log("Logged in user ID:", currentUser.id);
     
-    // جلب البروفايل الخاص به
+    // جلب اسم المستخدم من جدول profiles
     const { data: profile } = await supabase
       .from('profiles')
       .select('*')
@@ -114,7 +115,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
   }
 });
 
-// ================= إدارة الحسابات عبر Supabase Auth =================
+// ================= إدارة الحسابات (تسجيل وحفظ وتسجيل خروج) =================
 async function handleRegister() {
     const username = document.getElementById('regUser').value.trim();
     const pass1 = document.getElementById('regPass1').value;
@@ -129,8 +130,8 @@ async function handleRegister() {
         return;
     }
 
-    // خدعة برمجية لإنشاء حساب في Supabase باستخدام اسم المستخدم كإيميل وهمي
-    const fakeEmail = `${username.toLowerCase().replace(/\s+/g, '_')}@bukamel.app`;
+    // توليد بريد إلكتروني افتراضي فريد بناءً على اسم المستخدم
+    const fakeEmail = `${username.toLowerCase().replace(/[^a-z0-9]/g, '_')}@bukamel.app`;
 
     const { data, error } = await supabase.auth.signUp({
         email: fakeEmail,
@@ -143,12 +144,16 @@ async function handleRegister() {
     }
 
     if (data.user) {
-        // حفظ اسم المستخدم في جدول profiles
-        await supabase.from('profiles').insert({
+        // حفظ البروفايل في جدول profiles الجديد
+        const { error: profileErr } = await supabase.from('profiles').insert({
             id: data.user.id,
             username: username,
             is_admin: false
         });
+
+        if (profileErr) {
+            console.error('Profile creation error:', profileErr.message);
+        }
         
         alert(`تم إنشاء الحساب بنجاح يا ${username}! يمكنك تسجيل الدخول الآن.`);
         switchAuthView('login');
@@ -164,7 +169,7 @@ async function handleLogin() {
         return;
     }
 
-    const fakeEmail = `${uInput.toLowerCase().replace(/\s+/g, '_')}@bukamel.app`;
+    const fakeEmail = `${uInput.toLowerCase().replace(/[^a-z0-9]/g, '_')}@bukamel.app`;
 
     const { data, error } = await supabase.auth.signInWithPassword({
         email: fakeEmail,
@@ -175,8 +180,6 @@ async function handleLogin() {
         alert('اسم المستخدم أو كلمة المرور غير صحيحة!');
         return;
     }
-
-    // الـ onAuthStateChange ستقوم بالباقي وتفتح لوحة التحكم تلقائياً
 }
 
 async function logout() {
@@ -186,7 +189,7 @@ async function logout() {
     document.getElementById('loginViewContainer').classList.remove('hidden');
 }
 
-// ================= واجهة التطبيق والتحكم =================
+// ================= الواجهة والتحكم بالبيانات =================
 function initAppDashboard() {
     document.getElementById('loginViewContainer').classList.add('hidden');
     document.getElementById('mainAppLayout').classList.remove('hidden');
@@ -202,10 +205,10 @@ function initAppDashboard() {
 function handleScopeChange(val) {
     const monthWrap = document.getElementById('scopeMonthWrapper');
     const quarterWrap = document.getElementById('scopeQuarterWrapper');
-    monthWrap.classList.add('hidden');
-    quarterWrap.classList.add('hidden');
-    if (val === 'month') monthWrap.classList.remove('hidden');
-    else if (val === 'quarter') quarterWrap.classList.remove('hidden');
+    if(monthWrap) monthWrap.classList.add('hidden');
+    if(quarterWrap) quarterWrap.classList.add('hidden');
+    if (val === 'month' && monthWrap) monthWrap.classList.remove('hidden');
+    else if (val === 'quarter' && quarterWrap) quarterWrap.classList.remove('hidden');
 }
 
 async function addNewCustomHabit() {
@@ -219,12 +222,12 @@ async function addNewCustomHabit() {
 
     const { data, error } = await supabase
         .from('habits')
-        .insert({ user_id: currentUser.id, habit_name: name, habit_icon: icon })
+        .insert({ user_id: currentUser.id, habit_name: name, habit_icon: icon, scope: 'year' })
         .select()
         .single();
 
     if (error) {
-        alert('حدث خطأ أثناء إضافة العادة');
+        alert('حدث خطأ أثناء إضافة العادة: ' + error.message);
         return;
     }
 
@@ -232,7 +235,7 @@ async function addNewCustomHabit() {
         id: data.id,
         name: data.habit_name,
         icon: data.habit_icon,
-        scope: 'year'
+        scope: data.scope
     });
 
     document.getElementById('newHabitName').value = '';
@@ -243,10 +246,12 @@ async function addNewCustomHabit() {
 
 async function deleteHabit(habitId) {
     if (confirm('هل أنت متأكد من حذف هذه العادة؟')) {
-        await supabase.from('habits').delete().eq('id', habitId);
-        currentUser.customHabits = currentUser.customHabits.filter(h => h.id !== habitId);
-        renderAdminHabitsList();
-        updateDashboardPerformance();
+        const { error } = await supabase.from('habits').delete().eq('id', habitId);
+        if(!error) {
+            currentUser.customHabits = currentUser.customHabits.filter(h => h.id !== habitId);
+            renderAdminHabitsList();
+            updateDashboardPerformance();
+        }
     }
 }
 
@@ -413,7 +418,6 @@ function renderDayHabits() {
 async function updateHabitStatus(habitId, status) {
     const targetDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(currentDayIndex + 1).padStart(2, '0')}`;
     
-    // تحديث محلياً لتسريع الواجهة
     if (!currentUser.logsData) currentUser.logsData = [];
     const existingLog = currentUser.logsData.find(l => l.habit_id == habitId && l.log_date === targetDate);
     if (existingLog) {
@@ -422,7 +426,7 @@ async function updateHabitStatus(habitId, status) {
         currentUser.logsData.push({ habit_id: habitId, log_date: targetDate, status: status });
     }
 
-    await toggleHabitLogSupabase(habitId, targetDate, status);
+    await saveLogToSupabase(habitId, targetDate, status);
 
     if (status === 'done') playSound('success');
     else if (status === 'super') playSound('super');
@@ -508,7 +512,7 @@ async function updateFullMonthHabit(dayIdx, habitId, status) {
         currentUser.logsData.push({ habit_id: habitId, log_date: targetDate, status: status });
     }
 
-    await toggleHabitLogSupabase(habitId, targetDate, status);
+    await saveLogToSupabase(habitId, targetDate, status);
 
     if (status === 'done') playSound('success');
     else if (status === 'super') playSound('super');
@@ -547,7 +551,10 @@ function openQuarterEvaluation(title, monthsArray) {
 
         for (let d = 0; d < daysCount; d++) {
             activeHabits.forEach(habit => {
-                const status = getLogStatus(habit.id, d);
+                const targetDate = `${currentYear}-${String(mAdjusted + 1).padStart(2, '0')}-${String(d + 1).padStart(2, '0')}`;
+                const log = currentUser.logsData && currentUser.logsData.find(l => l.habit_id == habit.id && l.log_date === targetDate);
+                const status = log ? log.status : 'none';
+
                 if (status === 'done') earnedPoints += 1;
                 else if (status === 'super') earnedPoints += 1.25;
             });
@@ -649,7 +656,7 @@ function toggleTheme() {
     }
 }
 
-// ربط الدوال بالنافذة العامة لتتفاعل مع أزرار HTML
+// ربط الدوال بالنافذة العامة لتتفاعل مع الأزرار في HTML
 window.handleRegister = handleRegister;
 window.handleLogin = handleLogin;
 window.logout = logout;
