@@ -179,7 +179,9 @@ function switchAuthView(viewType) {
     }
 }
 
-function handleRegister() {
+// جعل الدوال متاحة عالمياً لضمان عمل الأزرار في HTML
+window.switchAuthView = switchAuthView;
+window.handleRegister = function() {
     const email = document.getElementById('regEmail').value.trim().toLowerCase();
     const username = document.getElementById('regUser').value.trim();
     const pass1 = document.getElementById('regPass1').value;
@@ -215,9 +217,9 @@ function handleRegister() {
     saveDatabase();
     alert(`تم إنشاء الحساب بنجاح يا ${username}! رقمك المميز هو: ${userCode}`);
     switchAuthView('login');
-}
+};
 
-function handleLogin() {
+window.handleLogin = function() {
     const eInput = document.getElementById('loginEmail').value.trim().toLowerCase();
     const pInput = document.getElementById('loginPass').value;
 
@@ -238,14 +240,14 @@ function handleLogin() {
 
     localStorage.setItem('bu_kamel_active_user', user.email);
     initAppDashboard();
-}
+};
 
-function logout() {
+window.logout = function() {
     currentUser = null;
     localStorage.removeItem('bu_kamel_active_user');
     document.getElementById('mainAppLayout').classList.add('hidden');
     document.getElementById('loginViewContainer').classList.remove('hidden');
-}
+};
 
 function initAppDashboard() {
     document.getElementById('loginViewContainer').classList.add('hidden');
@@ -261,7 +263,7 @@ function initAppDashboard() {
 }
 
 // ================= نظام الملف الشخصي والأصدقاء =================
-function openProfileView() {
+window.openProfileView = function() {
     document.getElementById('mainDashboardView').classList.add('hidden');
     document.getElementById('monthView').classList.add('hidden');
     document.getElementById('fullMonthView').classList.add('hidden');
@@ -269,22 +271,21 @@ function openProfileView() {
     document.getElementById('profileView').classList.remove('hidden');
 
     document.getElementById('profileDisplayName').textContent = currentUser.username;
-    // عرض البريد الإلكتروني لصاحب الحساب فقط في بروفايله الخاص سرياً
     document.getElementById('profileDisplayEmail').textContent = `البريد الإلكتروني (سري ولا يراه أحد غيرك): ${currentUser.email || 'غير متوفر'}`;
     document.getElementById('profileDisplayId').textContent = currentUser.userCode;
     document.getElementById('profileBioInput').value = currentUser.bio || '';
 
     renderFriendsList();
-}
+};
 
-function saveProfileBio() {
+window.saveProfileBio = function() {
     const newBio = document.getElementById('profileBioInput').value.trim();
     currentUser.bio = newBio;
     saveDatabase();
     alert('تم تحديث البايو الشخصي بنجاح! ✨');
-}
+};
 
-function searchAndAddFriend() {
+window.searchAndAddFriend = function() {
     const friendId = document.getElementById('searchFriendIdInput').value.trim();
     if (!friendId) {
         alert('الرجاء إدخال الرقم المميز للصديق!');
@@ -312,7 +313,7 @@ function searchAndAddFriend() {
     document.getElementById('searchFriendIdInput').value = '';
     renderFriendsList();
     alert(`تمت إضافة الصديق ${targetFriend.username} بنجاح! 🎉`);
-}
+};
 
 function renderFriendsList() {
     const container = document.getElementById('friendsListContainer');
@@ -344,7 +345,6 @@ function renderFriendsList() {
 
         const card = document.createElement('div');
         card.style.cssText = "background: var(--bg-card); padding: 12px; border-radius: 10px; border: 1px solid var(--border-glass); display: flex; justify-content: space-between; align-items: center; gap: 10px;";
-        // الاسم فقط والـ ID والنبذة التي تظهر للأصدقاء بدون البريد نهائياً
         card.innerHTML = `
             <div>
                 <strong style="color: var(--accent-color); font-size: 0.95rem;">👤 ${friendObj.username}</strong>
@@ -361,7 +361,7 @@ function renderFriendsList() {
 }
 // ==================================================================================
 
-function handleScopeChange(val) {
+window.handleScopeChange = function(val) {
     const monthWrap = document.getElementById('scopeMonthWrapper');
     const quarterWrap = document.getElementById('scopeQuarterWrapper');
     
@@ -370,9 +370,9 @@ function handleScopeChange(val) {
 
     if (val === 'month') monthWrap.classList.remove('hidden');
     else if (val === 'quarter') quarterWrap.classList.remove('hidden');
-}
+};
 
-function addNewCustomHabit() {
+window.addNewCustomHabit = function() {
     const name = document.getElementById('newHabitName').value.trim();
     let icon = document.getElementById('newHabitIcon').value.trim() || '⭐';
     const scopeType = document.getElementById('habitScopeType').value;
@@ -398,16 +398,16 @@ function addNewCustomHabit() {
     document.getElementById('newHabitIcon').value = '';
     renderAdminHabitsList();
     alert('تمت إضافة العادة بنجاح! 🎉');
-}
+};
 
-function deleteHabit(habitId) {
+window.deleteHabit = function(habitId) {
     if (confirm('هل أنت متأكد من حذف هذه العادة؟')) {
         currentUser.customHabits = currentUser.customHabits.filter(h => h.id !== habitId);
         saveDatabase();
         renderAdminHabitsList();
         updateDashboardPerformance();
     }
-}
+};
 
 function renderAdminHabitsList() {
     const container = document.getElementById('currentHabitsListAdmin');
@@ -470,7 +470,7 @@ function renderYearsList() {
     });
 }
 
-function addNewYear() {
+window.addNewYear = function() {
     const actualCurrentYear = new Date().getFullYear();
     const nextExpectedYear = Math.max(...availableYears) + 1;
 
@@ -487,7 +487,7 @@ function addNewYear() {
     } else {
         alert('هذه السنة موجودة بالفعل.');
     }
-}
+};
 
 function openYear(year) {
     currentYear = year;
@@ -519,7 +519,7 @@ function renderMonthsGrid() {
     });
 }
 
-function openMonth(monthIndex, monthName) {
+window.openMonth = function(monthIndex, monthName) {
     currentMonth = monthIndex;
     currentMonthName = monthName;
 
@@ -543,7 +543,7 @@ function openMonth(monthIndex, monthName) {
 
     populateQuickDayDropdown();
     renderDayHabits();
-}
+};
 
 function populateQuickDayDropdown() {
     const dropdown = document.getElementById('quickDayDropdown');
@@ -559,20 +559,20 @@ function populateQuickDayDropdown() {
     }
 }
 
-function jumpToSelectedDay(val) {
+window.jumpToSelectedDay = function(val) {
     if (val !== "") {
         currentDayIndex = parseInt(val);
         renderDayHabits();
     }
-}
+};
 
-function changeDay(direction) {
+window.changeDay = function(direction) {
     const daysCount = new Date(currentYear, currentMonth + 1, 0).getDate();
     currentDayIndex += direction;
     if (currentDayIndex < 0) currentDayIndex = 0;
     if (currentDayIndex >= daysCount) currentDayIndex = daysCount - 1;
     renderDayHabits();
-}
+};
 
 function renderDayHabits() {
     const dayNumber = currentDayIndex + 1;
@@ -612,7 +612,7 @@ function renderDayHabits() {
     if (dropdown) dropdown.value = currentDayIndex;
 }
 
-function updateHabitStatus(habitId, status) {
+window.updateHabitStatus = function(habitId, status) {
     const key = `${currentYear}_${currentMonth}_${currentDayIndex}_${habitId}`;
     currentUser.data[key] = status;
     saveDatabase();
@@ -622,9 +622,9 @@ function updateHabitStatus(habitId, status) {
     else playSound('clear');
 
     updateDashboardPerformance();
-}
+};
 
-function goHome() {
+window.goHome = function() {
     document.getElementById('monthView').classList.add('hidden');
     document.getElementById('profileView').classList.add('hidden');
     document.getElementById('fullMonthView').classList.add('hidden');
@@ -632,7 +632,7 @@ function goHome() {
     document.getElementById('mainDashboardView').classList.remove('hidden');
     renderAdminHabitsList();
     updateDashboardPerformance();
-}
+};
 
 function updateDashboardPerformance() {
     if (!currentUser) return;
@@ -655,7 +655,7 @@ function updateDashboardPerformance() {
     if (displayEl) displayEl.textContent = `${percentage}%`;
 }
 
-function openFullMonthView() {
+window.openFullMonthView = function() {
     document.getElementById('monthView').classList.add('hidden');
     document.getElementById('fullMonthView').classList.remove('hidden');
     document.getElementById('fullMonthHeaderTitle').textContent = `تعديل شهر ${currentMonthName} كاملاً (${currentYear})`;
@@ -690,16 +690,16 @@ function openFullMonthView() {
         dayBox.innerHTML = html;
         container.appendChild(dayBox);
     }
-}
+};
 
-function updateFullMonthHabit(dayIdx, habitId, status) {
+window.updateFullMonthHabit = function(dayIdx, habitId, status) {
     const key = `${currentYear}_${currentMonth}_${dayIdx}_${habitId}`;
     currentUser.data[key] = status;
     saveDatabase();
     if (status === 'done') playSound('success');
     else if (status === 'super') playSound('super');
     else playSound('clear');
-}
+};
 
 function getSmartEvaluationMessage(type, ratio, name) {
     if (ratio > 90) {
@@ -713,7 +713,7 @@ function getSmartEvaluationMessage(type, ratio, name) {
     }
 }
 
-function openQuarterEvaluation(title, monthsArray) {
+window.openQuarterEvaluation = function(title, monthsArray) {
     document.getElementById('mainDashboardView').classList.add('hidden');
     document.getElementById('profileView').classList.add('hidden');
     document.getElementById('monthView').classList.add('hidden');
@@ -754,9 +754,9 @@ function openQuarterEvaluation(title, monthsArray) {
 
     const ratio = totalPossible > 0 ? Math.round((earnedPoints / totalPossible) * 100) : 0;
     document.getElementById('evalContentBox').innerHTML = getSmartEvaluationMessage('quarter', ratio, title);
-}
+};
 
-function openAnnualEvaluation() {
+window.openAnnualEvaluation = function() {
     document.getElementById('mainDashboardView').classList.add('hidden');
     document.getElementById('profileView').classList.add('hidden');
     document.getElementById('monthView').classList.add('hidden');
@@ -795,13 +795,13 @@ function openAnnualEvaluation() {
 
     const ratio = totalPossible > 0 ? Math.round((earnedPoints / totalPossible) * 100) : 0;
     document.getElementById('evalContentBox').innerHTML = getSmartEvaluationMessage('annual', ratio, currentYear);
-}
+};
 
-function closeMonthReport() {
+window.closeMonthReport = function() {
     document.getElementById('monthView').classList.add('hidden');
     document.getElementById('evaluationView').classList.remove('hidden');
     
-    document.getElementById('evalHeaderTitle').textContent = `تقرير شهر ${currentMonthName}`;
+    document.getElementById('evalHeaderTitle', `تقرير شهر ${currentMonthName}`);
     document.getElementById('evalTitleBox').textContent = `تقرير وتقييم أداء شهر ${currentMonthName} (${currentYear})`;
 
     const daysCount = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -820,4 +820,4 @@ function closeMonthReport() {
 
     const ratio = totalPossible > 0 ? Math.round((earnedPoints / totalPossible) * 100) : 0;
     document.getElementById('evalContentBox').innerHTML = getSmartEvaluationMessage('month', ratio, currentMonthName);
-}
+};
