@@ -1,5 +1,6 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
+// رابط المشروع والمفتاح
 const SUPABASE_URL = 'https://xqonshwjiojmuojzwkihd.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_G-tmLaIO0_WgsR4Wyyk7-Q_WwX7lQKw'
 
@@ -29,25 +30,6 @@ let db = JSON.parse(localStorage.getItem('bu_kamel_db')) || {
 
 function saveDatabase() {
     localStorage.setItem('bu_kamel_db', JSON.stringify(db));
-}
-
-function calculateUserPerformance(userObj) {
-    if (!userObj || !userObj.data) return 0;
-    const daysCount = new Date(currentYear, currentMonth + 1, 0).getDate();
-    const activeHabits = userObj.customHabits || defaultHabits;
-    let totalPossible = daysCount * activeHabits.length;
-    let earnedPoints = 0;
-
-    for (let d = 0; d < daysCount; d++) {
-        activeHabits.forEach(habit => {
-            const key = `${currentYear}_${currentMonth}_${d}_${habit.id}`;
-            const status = userObj.data[key];
-            if (status === 'done') earnedPoints += 1;
-            else if (status === 'super') earnedPoints += 1.25;
-        });
-    }
-
-    return totalPossible > 0 ? Math.min(100, Math.round((earnedPoints / totalPossible) * 100)) : 0;
 }
 
 function playSound(type) {
@@ -98,6 +80,7 @@ function toggleTheme() {
     }
 }
 
+// ================= نظام الترجمة والبحث الفعال =================
 const availableLanguages = [
     { code: 'ar', name: 'العربية (Arabic)' },
     { code: 'en', name: 'الإنجليزية (English)' },
@@ -164,6 +147,7 @@ window.addEventListener('click', function(e) {
         dropdown.classList.add('hidden');
     }
 });
+// ==========================================================
 
 window.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('bu_kamel_theme');
@@ -179,12 +163,6 @@ window.addEventListener('DOMContentLoaded', () => {
             if (!currentUser.customHabits) {
                 currentUser.customHabits = JSON.parse(JSON.stringify(defaultHabits));
             }
-            if (!currentUser.uniqueId) {
-                currentUser.uniqueId = 'ID_' + Math.floor(100000 + Math.random() * 900000);
-            }
-            if (!currentUser.friends) currentUser.friends = [];
-            if (!currentUser.bio) currentUser.bio = 'أهلاً بك في بروفايلي! أسعى لبناء عادات أفضل كل يوم.';
-            saveDatabase();
             initAppDashboard();
         }
     }
@@ -201,13 +179,12 @@ function switchAuthView(viewType) {
 }
 
 function handleRegister() {
-    const email = document.getElementById('regEmail').value.trim();
     const username = document.getElementById('regUser').value.trim();
     const pass1 = document.getElementById('regPass1').value;
     const pass2 = document.getElementById('regPass2').value;
 
-    if (!email || !username || !pass1) {
-        alert('الرجاء إدخال البريد الإلكتروني، اسم المستخدم وكلمة المرور!');
+    if (!username || !pass1) {
+        alert('الرجاء إدخال اسم المستخدم وكلمة المرور!');
         return;
     }
     if (pass1 !== pass2) {
@@ -221,20 +198,14 @@ function handleRegister() {
         return;
     }
 
-    const uniqueId = 'ID_' + Math.floor(100000 + Math.random() * 900000);
-
     db.users.push({
-        email: email,
         username: username,
         pass: pass1,
-        uniqueId: uniqueId,
-        bio: 'أهلاً بك في بروفايلي! أسعى لبناء عادات أفضل كل يوم.',
-        friends: [],
         data: {},
         customHabits: JSON.parse(JSON.stringify(defaultHabits))
     });
     saveDatabase();
-    alert(`تم إنشاء الحساب بنجاح يا ${username}! رقمك المميز هو: ${uniqueId}`);
+    alert(`تم إنشاء الحساب بنجاح يا ${username}!`);
     switchAuthView('login');
 }
 
@@ -252,13 +223,6 @@ function handleLogin() {
     if (!currentUser.customHabits) {
         currentUser.customHabits = JSON.parse(JSON.stringify(defaultHabits));
     }
-    if (!currentUser.uniqueId) {
-        currentUser.uniqueId = 'ID_' + Math.floor(100000 + Math.random() * 900000);
-    }
-    if (!currentUser.friends) currentUser.friends = [];
-    if (!currentUser.bio) currentUser.bio = 'أهلاً بك في بروفايلي! أسعى لبناء عادات أفضل كل يوم.';
-    saveDatabase();
-
     localStorage.setItem('bu_kamel_active_user', user.username);
     initAppDashboard();
 }
@@ -281,95 +245,6 @@ function initAppDashboard() {
     renderMonthsGrid();
     renderAdminHabitsList();
     updateDashboardPerformance();
-}
-
-function openProfileView() {
-    document.getElementById('mainDashboardView').classList.add('hidden');
-    document.getElementById('monthView').classList.add('hidden');
-    document.getElementById('fullMonthView').classList.add('hidden');
-    document.getElementById('evaluationView').classList.add('hidden');
-    document.getElementById('profileView').classList.remove('hidden');
-
-    document.getElementById('profileEmailDisplay').textContent = currentUser.email || 'غير مسجل';
-    document.getElementById('profileUsernameDisplay').textContent = currentUser.username;
-    document.getElementById('profileUniqueIdDisplay').textContent = currentUser.uniqueId;
-    document.getElementById('profileBioInput').value = currentUser.bio || '';
-
-    renderFriendsList();
-}
-
-function saveProfileBio() {
-    const newBio = document.getElementById('profileBioInput').value.trim();
-    currentUser.bio = newBio;
-    saveDatabase();
-    alert('تم حفظ البايو بنجاح! ✨');
-}
-
-function searchAndAddFriend() {
-    const queryId = document.getElementById('friendSearchInput').value.trim();
-    if (!queryId) {
-        alert('الرجاء إدخال الرقم المميز للصديق!');
-        return;
-    }
-
-    if (queryId === currentUser.uniqueId) {
-        alert('لا يمكنك إضافة نفسك كصديق!');
-        return;
-    }
-
-    const friendUser = db.users.find(u => u.uniqueId === queryId);
-    if (!friendUser) {
-        alert('⚠️ لم يتم العثور على مستخدم بهذا الرقم المميز.');
-        return;
-    }
-
-    if (currentUser.friends.includes(friendUser.uniqueId)) {
-        alert('هذا الصديق موجود بالفعل في قائمتك!');
-        return;
-    }
-
-    currentUser.friends.includes(friendUser.uniqueId) || currentUser.friends.push(friendUser.uniqueId);
-    saveDatabase();
-    document.getElementById('friendSearchInput').value = '';
-    renderFriendsList();
-    alert(`تمت إضافة الصديق ${friendUser.username} بنجاح! 🎉`);
-}
-
-function renderFriendsList() {
-    const container = document.getElementById('friendsListContainer');
-    container.innerHTML = '';
-
-    if (!currentUser.friends || currentUser.friends.length === 0) {
-        container.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 10px; font-size: 0.85rem;">ليس لديك أصدقاء مضافون حالياً. استخدم الرقم المميز للبحث وإضافة الأصدقاء.</p>`;
-        return;
-    }
-
-    currentUser.friends.forEach(fUniqueId => {
-        const friendObj = db.users.find(u => u.uniqueId === fUniqueId);
-        if (!friendObj) return;
-
-        const friendPerf = calculateUserPerformance(friendObj);
-
-        const card = document.createElement('div');
-        card.style.cssText = "background: var(--bg-main); padding: 12px; border-radius: 10px; border: 1px solid var(--border-glass); display: flex; justify-content: space-between; align-items: center; gap: 10px;";
-        card.innerHTML = `
-            <div>
-                <strong>👤 ${friendObj.username}</strong>
-                <p style="font-size: 0.75rem; color: var(--text-muted); margin: 2px 0;">💬 ${friendObj.bio || 'لا يوجد بايو'}</p>
-                <span style="font-size: 0.8rem; color: var(--success-color); font-weight: bold;">نسبة إنجازه هذا الشهر: ${friendPerf}%</span>
-            </div>
-            <button class="btn btn-danger btn-sm" onclick="removeFriend('${friendObj.uniqueId}')">إزالة</button>
-        `;
-        container.appendChild(card);
-    });
-}
-
-function removeFriend(fUniqueId) {
-    if (confirm('هل أنت متأكد من إزالة هذا الصديق؟')) {
-        currentUser.friends = currentUser.friends.filter(id => id !== fUniqueId);
-        saveDatabase();
-        renderFriendsList();
-    }
 }
 
 function handleScopeChange(val) {
@@ -534,20 +409,20 @@ function openMonth(monthIndex, monthName) {
     currentMonth = monthIndex;
     currentMonthName = monthName;
 
+    // الفتح التلقائي على اليوم الحالي إذا كانت السنة والشهر يتطابقان مع وقت النظام الحالي
     const today = new Date();
     if (currentYear === today.getFullYear() && currentMonth === today.getMonth()) {
-        currentDayIndex = today.getDate() - 1;
+        currentDayIndex = today.getDate() - 1; // الأيام تبدأ من 0 في الـ Index
         const maxDays = new Date(currentYear, currentMonth + 1, 0).getDate();
         if (currentDayIndex >= maxDays) currentDayIndex = maxDays - 1;
         if (currentDayIndex < 0) currentDayIndex = 0;
     } else {
-        currentDayIndex = 0;
+        currentDayIndex = 0; // افتراضي أول يوم للشهر القديم أو المستقبلي
     }
 
     document.getElementById('mainDashboardView').classList.add('hidden');
     document.getElementById('fullMonthView').classList.add('hidden');
     document.getElementById('evaluationView').classList.add('hidden');
-    document.getElementById('profileView').classList.add('hidden');
     document.getElementById('monthView').classList.remove('hidden');
     
     document.getElementById('activeMonthTitle').textContent = `تتبع عادات شهر ${monthName} (${currentYear})`;
@@ -639,7 +514,6 @@ function goHome() {
     document.getElementById('monthView').classList.add('hidden');
     document.getElementById('fullMonthView').classList.add('hidden');
     document.getElementById('evaluationView').classList.add('hidden');
-    document.getElementById('profileView').classList.add('hidden');
     document.getElementById('mainDashboardView').classList.remove('hidden');
     renderAdminHabitsList();
     updateDashboardPerformance();
@@ -647,7 +521,21 @@ function goHome() {
 
 function updateDashboardPerformance() {
     if (!currentUser) return;
-    const percentage = calculateUserPerformance(currentUser);
+    const daysCount = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const activeHabits = getActiveHabitsForCurrentMonth();
+    let totalPossible = daysCount * activeHabits.length;
+    let earnedPoints = 0;
+
+    for (let d = 0; d < daysCount; d++) {
+        activeHabits.forEach(habit => {
+            const key = `${currentYear}_${currentMonth}_${d}_${habit.id}`;
+            const status = currentUser.data[key];
+            if (status === 'done') earnedPoints += 1;
+            else if (status === 'super') earnedPoints += 1.25;
+        });
+    }
+
+    const percentage = totalPossible > 0 ? Math.min(100, Math.round((earnedPoints / totalPossible) * 100)) : 0;
     const displayEl = document.getElementById('actualPerformanceDisplay');
     if (displayEl) displayEl.textContent = `${percentage}%`;
 }
@@ -698,7 +586,9 @@ function updateFullMonthHabit(dayIdx, habitId, status) {
     else playSound('clear');
 }
 
+// ================= مولد الرسائل الذكية والمتنوعة حسب النسبة ونوع التقرير =================
 function getSmartEvaluationMessage(type, ratio, name) {
+    // 1. أكثر من 90% (يتروق عليه بمديح استثنائي)
     if (ratio > 90) {
         if (type === 'month') {
             return `إنجاز أسطوري في شهر <strong>${name}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 👑🔥\n\nيا سلام عليك يا بطل! أنت كدة "تروّق" على أصولها.. التزام حديدي وعزيمة لا تذبل، استمر في هذا المستوى المرعب من الانضباط!`;
@@ -707,7 +597,9 @@ function getSmartEvaluationMessage(type, ratio, name) {
         } else {
             return `التقرير السنوي الأسطوري لعام <strong>${currentYear}</strong> بنسبة إنجاز <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 🌟👑\n\nسنة كاملة من المجد والالتزام الخارق! لقد أبدعت حقاً وصنعت مستقبلاً عظيماً، استمتع بثمرة هذا العطاء الضخم!`;
         }
-    } else if (ratio >= 75) {
+    }
+    // 2. من 75% إلى 90% (تحفيز قوي ودفع للأمام)
+    else if (ratio >= 75) {
         if (type === 'month') {
             return `أداء ممتاز ومبهر لشهر <strong>${name}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>! 💪✨\n\nأنت في منطقة الأبطال! دفعة صغيرة وتصل للقمة المطلقة، واصل هذا السير الثابت ولا تتراجع أبداً!`;
         } else if (type === 'quarter') {
@@ -715,7 +607,9 @@ function getSmartEvaluationMessage(type, ratio, name) {
         } else {
             return `حصاد سنوي مشرف جداً لعام <strong>${currentYear}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>! 📈🌟\n\nعام مليء بالإنجازات والتقدم الحقيقي، أنت تسير بخطى واثقة نحو نسخة أفضل منك دائماً!`;
         }
-    } else if (ratio >= 45) {
+    }
+    // 3. من 45% إلى 74% (تشجيع متوازن وتوعية)
+    else if (ratio >= 45) {
         if (type === 'month') {
             return `أداء مقبول لشهر <strong>${name}</strong> بنسبة <span style="color: var(--accent-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>. ☕⚠️\n\nبداية جيدة لكنها لا تليق بطموحاتك! عندك طاقة أكبر بكتير، نظم وقتك وشد الهمة في الشاي القادم!`;
         } else if (type === 'quarter') {
@@ -723,7 +617,9 @@ function getSmartEvaluationMessage(type, ratio, name) {
         } else {
             return `التقرير السنوي لعام <strong>${currentYear}</strong> بلغ <span style="color: var(--accent-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>. 📉⚖️\n\nسنة فيها وعليها.. أظهرت التزاماً في أوقات وتراجعاً في أوقات أخرى. القادم يحتاج تركيزاً أعمق!`;
         }
-    } else {
+    }
+    // 4. أقل من 45% (زعل محب وتحفيز يوقظ الهمة)
+    else {
         if (type === 'month') {
             return `أنا زعلان منك بصراحة! نسبة إنجاز شهر <strong>${name}</strong> نزلت إلى <span style="color: var(--danger-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 🛑❌\n\nفين العزيمة؟ فين التخطي والالتزام؟ عاداتك الرائعة تنتظرك، استيقظ وفض الغبار عن همتك لأنك تقدر تعمل أفضل من كده بكتير!`;
         } else if (type === 'quarter') {
@@ -733,12 +629,12 @@ function getSmartEvaluationMessage(type, ratio, name) {
         }
     }
 }
+// ==================================================================================
 
 function openQuarterEvaluation(title, monthsArray) {
     document.getElementById('mainDashboardView').classList.add('hidden');
     document.getElementById('monthView').classList.add('hidden');
     document.getElementById('fullMonthView').classList.add('hidden');
-    document.getElementById('profileView').classList.add('hidden');
     document.getElementById('evaluationView').classList.remove('hidden');
     
     document.getElementById('evalHeaderTitle').textContent = title;
@@ -781,7 +677,6 @@ function openAnnualEvaluation() {
     document.getElementById('mainDashboardView').classList.add('hidden');
     document.getElementById('monthView').classList.add('hidden');
     document.getElementById('fullMonthView').classList.add('hidden');
-    document.getElementById('profileView').classList.add('hidden');
     document.getElementById('evaluationView').classList.remove('hidden');
     
     document.getElementById('evalHeaderTitle').textContent = "التقييم السنوي";
