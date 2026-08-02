@@ -552,10 +552,10 @@ body {
 body { top: 0px !important; }
 .goog-te-gadget { font-size: 0px !important; }
 
-/* تنسيق الجملة التعريفية (App Tagline) متوافق مع الثيمات */
+/* تنسيق الجملة التعريفية (App Tagline) */
 .app-tagline {
     font-size: 0.95rem;
-    color: var(--text-muted);
+    color: #64748b;
     text-align: center;
     margin-top: 5px;
     margin-bottom: 20px;
