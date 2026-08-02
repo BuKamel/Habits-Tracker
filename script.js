@@ -471,15 +471,14 @@ function openMonth(monthIndex, monthName) {
     currentMonth = monthIndex;
     currentMonthName = monthName;
 
-    // الفتح التلقائي على اليوم الحالي إذا كانت السنة والشهر يتطابقان مع وقت النظام الحالي
     const today = new Date();
     if (currentYear === today.getFullYear() && currentMonth === today.getMonth()) {
-        currentDayIndex = today.getDate() - 1; // الأيام تبدأ من 0 في الـ Index
+        currentDayIndex = today.getDate() - 1;
         const maxDays = new Date(currentYear, currentMonth + 1, 0).getDate();
         if (currentDayIndex >= maxDays) currentDayIndex = maxDays - 1;
         if (currentDayIndex < 0) currentDayIndex = 0;
     } else {
-        currentDayIndex = 0; // افتراضي أول يوم للشهر القديم أو المستقبلي
+        currentDayIndex = 0;
     }
 
     document.getElementById('mainDashboardView').classList.add('hidden');
@@ -650,7 +649,6 @@ function updateFullMonthHabit(dayIdx, habitId, status) {
 
 // ================= مولد الرسائل الذكية والمتنوعة حسب النسبة ونوع التقرير =================
 function getSmartEvaluationMessage(type, ratio, name) {
-    // 1. أكثر من 90% (يتروق عليه بمديح استثنائي)
     if (ratio > 90) {
         if (type === 'month') {
             return `إنجاز أسطوري في شهر <strong>${name}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 👑🔥\n\nيا سلام عليك يا بطل! أنت كدة "تروّق" على أصولها.. التزام حديدي وعزيمة لا تذبل، استمر في هذا المستوى المرعب من الانضباط!`;
@@ -659,9 +657,7 @@ function getSmartEvaluationMessage(type, ratio, name) {
         } else {
             return `التقرير السنوي الأسطوري لعام <strong>${currentYear}</strong> بنسبة إنجاز <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 🌟👑\n\nسنة كاملة من المجد والالتزام الخارق! لقد أبدعت حقاً وصنعت مستقبلاً عظيماً، استمتع بثمرة هذا العطاء الضخم!`;
         }
-    }
-    // 2. من 75% إلى 90% (تحفيز قوي ودفع للأمام)
-    else if (ratio >= 75) {
+    } else if (ratio >= 75) {
         if (type === 'month') {
             return `أداء ممتاز ومبهر لشهر <strong>${name}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>! 💪✨\n\nأنت في منطقة الأبطال! دفعة صغيرة وتصل للقمة المطلقة، واصل هذا السير الثابت ولا تتراجع أبداً!`;
         } else if (type === 'quarter') {
@@ -669,9 +665,7 @@ function getSmartEvaluationMessage(type, ratio, name) {
         } else {
             return `حصاد سنوي مشرف جداً لعام <strong>${currentYear}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>! 📈🌟\n\nعام مليء بالإنجازات والتقدم الحقيقي، أنت تسير بخطى واثقة نحو نسخة أفضل منك دائماً!`;
         }
-    }
-    // 3. من 45% إلى 74% (تشجيع متوازن وتوعية)
-    else if (ratio >= 45) {
+    } else if (ratio >= 45) {
         if (type === 'month') {
             return `أداء مقبول لشهر <strong>${name}</strong> بنسبة <span style="color: var(--accent-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>. ☕⚠️\n\nبداية جيدة لكنها لا تليق بطموحاتك! عندك طاقة أكبر بكتير، نظم وقتك وشد الهمة في الشاي القادم!`;
         } else if (type === 'quarter') {
@@ -679,9 +673,7 @@ function getSmartEvaluationMessage(type, ratio, name) {
         } else {
             return `التقرير السنوي لعام <strong>${currentYear}</strong> بلغ <span style="color: var(--accent-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>. 📉⚖️\n\nسنة فيها وعليها.. أظهرت التزاماً في أوقات وتراجعاً في أوقات أخرى. القادم يحتاج تركيزاً أعمق!`;
         }
-    }
-    // 4. أقل من 45% (زعل محب وتحفيز يوقظ الهمة)
-    else {
+    } else {
         if (type === 'month') {
             return `أنا زعلان منك بصراحة! نسبة إنجاز شهر <strong>${name}</strong> نزلت إلى <span style="color: var(--danger-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 🛑❌\n\nفين العزيمة؟ فين التخطي والالتزام؟ عاداتك الرائعة تنتظرك، استيقظ وفض الغبار عن همتك لأنك تقدر تعمل أفضل من كده بكتير!`;
         } else if (type === 'quarter') {
@@ -799,6 +791,7 @@ function closeMonthReport() {
     const ratio = totalPossible > 0 ? Math.round((earnedPoints / totalPossible) * 100) : 0;
     document.getElementById('evalContentBox').innerHTML = getSmartEvaluationMessage('month', ratio, currentMonthName);
 }
+
 // --- ربط الدوال بالنطاق العام لتعمل الأزرار مع الـ ES Module ---
 window.toggleTheme = toggleTheme;
 window.toggleTranslateMenu = toggleTranslateMenu;
