@@ -50,6 +50,23 @@ async function toggleHabitLogSupabase(habitId, completedDate, status) {
     console.error('Error saving log to Supabase:', error.message);
   }
 }
+// --- مراقبة حالة تسجيل الدخول وجلب البيانات تلقائياً ---
+supabase.auth.onAuthStateChange(async (event, session) => {
+  if (session) {
+    currentUser = session.user;
+    console.log("Logged in user:", currentUser.email);
+    
+    // جلب بيانات المستخدم وتحديث الواجهة
+    const userData = await fetchUserData(currentUser.id);
+    if (userData) {
+      console.log("User data fetched successfully:", userData);
+      // هنا هنحدث المتغيرات المحلية (زي db) بالعادات والسجلات اللي رجعت من السحابة
+    }
+  } else {
+    currentUser = null;
+    console.log("No user logged in.");
+  }
+});
 let currentUser = null;
 let currentYear = 2026;
 let currentMonth = 6;
