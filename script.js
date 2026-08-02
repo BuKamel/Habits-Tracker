@@ -154,7 +154,7 @@ window.addEventListener('DOMContentLoaded', () => {
     
     const activeSession = localStorage.getItem('bu_kamel_active_user');
     if (activeSession) {
-        const found = db.users.find(u => u.username === activeSession);
+        const found = db.users.find(u => u.email === activeSession);
         if (found) {
             currentUser = found;
             if (!currentUser.customHabits) {
@@ -180,7 +180,7 @@ function switchAuthView(viewType) {
 }
 
 function handleRegister() {
-    const email = document.getElementById('regEmail').value.trim();
+    const email = document.getElementById('regEmail').value.trim().toLowerCase();
     const username = document.getElementById('regUser').value.trim();
     const pass1 = document.getElementById('regPass1').value;
     const pass2 = document.getElementById('regPass2').value;
@@ -194,9 +194,9 @@ function handleRegister() {
         return;
     }
 
-    const existingUser = db.users.find(u => u.username.toLowerCase() === username.toLowerCase());
+    const existingUser = db.users.find(u => u.email.toLowerCase() === email);
     if (existingUser) {
-        alert('⚠️ اسم المستخدم موجود مسبقاً!');
+        alert('⚠️ هذا البريد الإلكتروني مسجل مسبقاً!');
         return;
     }
 
@@ -218,12 +218,12 @@ function handleRegister() {
 }
 
 function handleLogin() {
-    const uInput = document.getElementById('loginUser').value.trim();
+    const eInput = document.getElementById('loginEmail').value.trim().toLowerCase();
     const pInput = document.getElementById('loginPass').value;
 
-    const user = db.users.find(u => u.username === uInput && u.pass === pInput);
+    const user = db.users.find(u => u.email.toLowerCase() === eInput && u.pass === pInput);
     if (!user) {
-        alert('اسم المستخدم أو كلمة المرور غير صحيحة!');
+        alert('البريد الإلكتروني أو كلمة المرور غير صحيحة!');
         return;
     }
 
@@ -236,7 +236,7 @@ function handleLogin() {
     if (!currentUser.userCode) currentUser.userCode = 'BK-' + Math.floor(100000 + Math.random() * 900000);
     saveDatabase();
 
-    localStorage.setItem('bu_kamel_active_user', user.username);
+    localStorage.setItem('bu_kamel_active_user', user.email);
     initAppDashboard();
 }
 
@@ -260,7 +260,7 @@ function initAppDashboard() {
     updateDashboardPerformance();
 }
 
-// ================= نظام الملف الشخصي والأصدقاء (الخصوصية التامة للبريد) =================
+// ================= نظام الملف الشخصي والأصدقاء =================
 function openProfileView() {
     document.getElementById('mainDashboardView').classList.add('hidden');
     document.getElementById('monthView').classList.add('hidden');
@@ -269,7 +269,7 @@ function openProfileView() {
     document.getElementById('profileView').classList.remove('hidden');
 
     document.getElementById('profileDisplayName').textContent = currentUser.username;
-    // عرض البريد الإلكتروني لصاحب الحساب فقط في بروفايله الخاص مع تأكيد سريته
+    // عرض البريد الإلكتروني لصاحب الحساب فقط في بروفايله الخاص سرياً
     document.getElementById('profileDisplayEmail').textContent = `البريد الإلكتروني (سري ولا يراه أحد غيرك): ${currentUser.email || 'غير متوفر'}`;
     document.getElementById('profileDisplayId').textContent = currentUser.userCode;
     document.getElementById('profileBioInput').value = currentUser.bio || '';
@@ -302,12 +302,12 @@ function searchAndAddFriend() {
         return;
     }
 
-    if (currentUser.friends.includes(targetFriend.username)) {
+    if (currentUser.friends.includes(targetFriend.email)) {
         alert('⚠️ هذا المستخدم موجود بالفعل في قائمة أصدقائك!');
         return;
     }
 
-    currentUser.friends.push(targetFriend.username);
+    currentUser.friends.push(targetFriend.email);
     saveDatabase();
     document.getElementById('searchFriendIdInput').value = '';
     renderFriendsList();
@@ -323,11 +323,10 @@ function renderFriendsList() {
         return;
     }
 
-    currentUser.friends.forEach(friendName => {
-        const friendObj = db.users.find(u => u.username === friendName);
+    currentUser.friends.forEach(friendEmail => {
+        const friendObj = db.users.find(u => u.email === friendEmail);
         if (!friendObj) return;
 
-        // حساب نسبة إنجاز الصديق للشهر الحالي لتشجيع بعضهم (بدون إظهار أي بريد أو معلومات اتصال خاصة به نهائياً)
         const daysCount = new Date(currentYear, currentMonth + 1, 0).getDate();
         const friendHabits = friendObj.customHabits || defaultHabits;
         let totalPossible = daysCount * friendHabits.length;
@@ -345,7 +344,7 @@ function renderFriendsList() {
 
         const card = document.createElement('div');
         card.style.cssText = "background: var(--bg-card); padding: 12px; border-radius: 10px; border: 1px solid var(--border-glass); display: flex; justify-content: space-between; align-items: center; gap: 10px;";
-        // لاحظ هنا: الاسم، البايو، والـ ID فقط التي تظهر للصديق، مع حجب البريد تماماً
+        // الاسم فقط والـ ID والنبذة التي تظهر للأصدقاء بدون البريد نهائياً
         card.innerHTML = `
             <div>
                 <strong style="color: var(--accent-color); font-size: 0.95rem;">👤 ${friendObj.username}</strong>
