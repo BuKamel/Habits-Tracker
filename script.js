@@ -1,3 +1,10 @@
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+// رابط المشروع والمفتاح
+const SUPABASE_URL = 'https://xqonshwjiojmuojzwkihd.supabase.co'
+const SUPABASE_KEY = 'sb_publishable_G-tmLaIO0_WgsR4Wyyk7-Q_WwX7lQKw'
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 let currentUser = null;
 let currentYear = 2026;
 let currentMonth = 6;
