@@ -1,72 +1,11 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
-// رابط المشروع والمفتاح اللي طلعناها //
+// --- إعدادات Supabase ---
 const SUPABASE_URL = 'https://xqonshwjiojmuojzwkihd.supabase.co'
 const SUPABASE_KEY = 'sb_publishable_G-tmLaiO0_WgsR4Wyyk7-Q_WwX7lQKw'
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
-// --- دالة جلب بيانات المستخدم وعاداته من Supabase ---
-async function fetchUserData(userId) {
-  try {
-    // 1. جلب العادات الخاصة بالمستخدم
-    const { data: habits, error: habitsError } = await supabase
-      .from('habits')
-      .select('*')
-      .eq('user_id', userId);
 
-    if (habitsError) throw habitsError;
-
-    // 2. جلب سجلات الإنجاز الخاصة بعادات المستخدم
-    const habitIds = habits.map(h => h.id);
-    if (habitIds.length === 0) return { habits: [], logs: [] };
-
-    const { data: logs, error: logsError } = await supabase
-      .from('habit_logs')
-      .select('*')
-      .in('habit_id', habitIds);
-
-    if (logsError) throw logsError;
-
-    return { habits, logs };
-  } catch (error) {
-    console.error('Error fetching data from Supabase:', error.message);
-    return null;
-  }
-}
-
-// --- دالة حفظ أو تحديث حالة الإنجاز في السحابة ---
-async function toggleHabitLogSupabase(habitId, completedDate, status) {
-  try {
-    const { data, error } = await supabase
-      .from('habit_logs')
-      .upsert(
-        { habit_id: habitId, completed_date: completedDate, status: status },
-        { onConflict: ['habit_id', 'completed_date'] }
-      );
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error('Error saving log to Supabase:', error.message);
-  }
-}
-// --- مراقبة حالة تسجيل الدخول وجلب البيانات تلقائياً ---
-supabase.auth.onAuthStateChange(async (event, session) => {
-  if (session) {
-    currentUser = session.user;
-    console.log("Logged in user:", currentUser.email);
-    
-    // جلب بيانات المستخدم وتحديث الواجهة
-    const userData = await fetchUserData(currentUser.id);
-    if (userData) {
-      console.log("User data fetched successfully:", userData);
-      // هنا هنحدث المتغيرات المحلية (زي db) بالعادات والسجلات اللي رجعت من السحابة
-    }
-  } else {
-    currentUser = null;
-    console.log("No user logged in.");
-  }
-});
 let currentUser = null;
 let currentYear = 2026;
 let currentMonth = 6;
@@ -84,163 +23,99 @@ const defaultHabits = [
     { id: 'quran', name: 'الورد اليومي (قرآن/قراءة)', icon: '📖', scope: 'year' }
 ];
 
-let availableYears = JSON.parse(localStorage.getItem('bu_kamel_years')) || [2023, 2024, 2025, 2026];
+let availableYears = [2023, 2024, 2025, 2026];
 
-let db = JSON.parse(localStorage.getItem('bu_kamel_db')) || {
-    users: []
-};
+// --- دالة جلب بيانات المستخدم وعاداته من Supabase ---
+async function fetchUserData(userId) {
+  try {
+    const { data: habits, error: habitsError } = await supabase
+      .from('habits')
+      .select('*')
+      .eq('user_id', userId);
 
-function saveDatabase() {
-    localStorage.setItem('bu_kamel_db', JSON.stringify(db));
-}
+    if (habitsError) throw habitsError;
 
-function playSound(type) {
-    try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        if (type === 'success') {
-            osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-            osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.3);
-        } else if (type === 'super') {
-            osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
-            osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
-            osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2);
-            osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.3);
-            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.5);
-        } else if (type === 'clear') {
-            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.15);
-        }
-    } catch (e) {
-        console.log("Audio not supported");
-    }
-}
-
-function toggleTheme() {
-    const htmlRoot = document.getElementById('htmlRoot');
-    const currentTheme = htmlRoot.getAttribute('data-theme');
-    if (currentTheme === 'dark') {
-        htmlRoot.removeAttribute('data-theme');
-        localStorage.setItem('bu_kamel_theme', 'light');
-    } else {
-        htmlRoot.setAttribute('data-theme', 'dark');
-        localStorage.setItem('bu_kamel_theme', 'dark');
-    }
-}
-
-// ================= نظام الترجمة والبحث الفعال =================
-const availableLanguages = [
-    { code: 'ar', name: 'العربية (Arabic)' },
-    { code: 'en', name: 'الإنجليزية (English)' },
-    { code: 'fr', name: 'الفرنسية (French)' },
-    { code: 'es', name: 'الإسبانية (Spanish)' },
-    { code: 'de', name: 'الألمانية (German)' },
-    { code: 'it', name: 'الإيطالية (Italian)' },
-    { code: 'tr', name: 'التركية (Turkish)' },
-    { code: 'ur', name: 'الأوردو (Urdu)' },
-    { code: 'hi', name: 'الهندية (Hindi)' },
-    { code: 'zh-CN', name: 'الصينية (Chinese)' },
-    { code: 'ja', name: 'اليابانية (Japanese)' },
-    { code: 'ru', name: 'الروسية (Russian)' },
-    { code: 'fa', name: 'الفارسية (Persian)' },
-    { code: 'id', name: 'الإندونيسية (Indonesian)' }
-];
-
-function toggleTranslateMenu() {
-    const dropdown = document.getElementById('translateDropdown');
-    dropdown.classList.toggle('hidden');
-    if (!dropdown.classList.contains('hidden')) {
-        renderLanguagesList(availableLanguages);
-        const searchInput = document.getElementById('langSearchInput');
-        searchInput.value = '';
-        searchInput.focus();
-    }
-}
-
-function renderLanguagesList(langs) {
-    const box = document.getElementById('languagesListBox');
-    box.innerHTML = '';
-    if (langs.length === 0) {
-        box.innerHTML = `<div style="padding: 8px; text-align: center; color: var(--text-muted); font-size: 0.8rem;">لا توجد لغة مطابقة</div>`;
-        return;
-    }
-    langs.forEach(lang => {
-        const div = document.createElement('div');
-        div.className = 'lang-option-item';
-        div.textContent = lang.name;
-        div.onclick = () => triggerGoogleTranslate(lang.code);
-        box.appendChild(div);
-    });
-}
-
-function filterLanguages(query) {
-    const q = query.trim().toLowerCase();
-    const filtered = availableLanguages.filter(l => l.name.toLowerCase().includes(q));
-    renderLanguagesList(filtered);
-}
-
-function triggerGoogleTranslate(langCode) {
-    const selectField = document.querySelector('.goog-te-combo');
-    if (selectField) {
-        selectField.value = langCode;
-        selectField.dispatchEvent(new Event('change'));
-    }
-    document.getElementById('translateDropdown').classList.add('hidden');
-}
-
-window.addEventListener('click', function(e) {
-    const wrapper = document.querySelector('.google-translate-wrapper');
-    const dropdown = document.getElementById('translateDropdown');
-    if (wrapper && dropdown && !wrapper.contains(e.target)) {
-        dropdown.classList.add('hidden');
-    }
-});
-// ==========================================================
-
-window.addEventListener('DOMContentLoaded', () => {
-    const savedTheme = localStorage.getItem('bu_kamel_theme');
-    if (savedTheme === 'dark') {
-        document.getElementById('htmlRoot').setAttribute('data-theme', 'dark');
-    }
-    
-    const activeSession = localStorage.getItem('bu_kamel_active_user');
-    if (activeSession) {
-        const found = db.users.find(u => u.username === activeSession);
-        if (found) {
-            currentUser = found;
-            if (!currentUser.customHabits) {
-                currentUser.customHabits = JSON.parse(JSON.stringify(defaultHabits));
+    let userHabits = habits;
+    // إذا لم يكن لديه عادات مسجلة بعد، ننشئ له العادات الافتراضية
+    if (!userHabits || userHabits.length === 0) {
+        userHabits = [];
+        for (const defHabit of defaultHabits) {
+            const { data: insertedHabit, error: insErr } = await supabase
+                .from('habits')
+                .insert({ user_id: userId, habit_name: defHabit.name, habit_icon: defHabit.icon })
+                .select()
+                .single();
+            if (!insErr && insertedHabit) {
+                userHabits.push({ id: insertedHabit.id, name: insertedHabit.habit_name, icon: insertedHabit.habit_icon, scope: 'year' });
             }
-            initAppDashboard();
         }
     }
-});
 
-function switchAuthView(viewType) {
-    if (viewType === 'register') {
-        document.getElementById('loginView').classList.add('hidden');
-        document.getElementById('registerView').classList.remove('hidden');
-    } else {
-        document.getElementById('registerView').classList.add('hidden');
-        document.getElementById('loginView').classList.remove('hidden');
-    }
+    const habitIds = userHabits.map(h => h.id);
+    if (habitIds.length === 0) return { habits: userHabits, logs: [] };
+
+    const { data: logs, error: logsError } = await supabase
+      .from('habit_logs')
+      .select('*')
+      .in('habit_id', habitIds);
+
+    if (logsError) throw logsError;
+
+    return { habits: userHabits, logs: logs || [] };
+  } catch (error) {
+    console.error('Error fetching data from Supabase:', error.message);
+    return null;
+  }
 }
 
-function handleRegister() {
+// --- دالة حفظ أو تحديث حالة الإنجاز في السحابة ---
+async function toggleHabitLogSupabase(habitId, completedDate, status) {
+  try {
+    if (!currentUser) return;
+    const { data, error } = await supabase
+      .from('habit_logs')
+      .upsert(
+        { user_id: currentUser.id, habit_id: habitId, log_date: completedDate, status: status },
+        { onConflict: ['habit_id', 'log_date'] }
+      );
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error saving log to Supabase:', error.message);
+  }
+}
+
+// --- مراقبة حالة تسجيل الدخول ---
+supabase.auth.onAuthStateChange(async (event, session) => {
+  if (session) {
+    currentUser = session.user;
+    console.log("Logged in user ID:", currentUser.id);
+    
+    // جلب البروفايل الخاص به
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', currentUser.id)
+      .single();
+
+    if (profile) {
+        currentUser.username = profile.username;
+    }
+
+    const userData = await fetchUserData(currentUser.id);
+    if (userData) {
+      currentUser.customHabits = userData.habits;
+      currentUser.logsData = userData.logs;
+      initAppDashboard();
+    }
+  } else {
+    currentUser = null;
+  }
+});
+
+// ================= إدارة الحسابات عبر Supabase Auth =================
+async function handleRegister() {
     const username = document.getElementById('regUser').value.trim();
     const pass1 = document.getElementById('regPass1').value;
     const pass2 = document.getElementById('regPass2').value;
@@ -254,54 +129,69 @@ function handleRegister() {
         return;
     }
 
-    const existingUser = db.users.find(u => u.username.toLowerCase() === username.toLowerCase());
-    if (existingUser) {
-        alert('⚠️ اسم المستخدم موجود مسبقاً!');
+    // خدعة برمجية لإنشاء حساب في Supabase باستخدام اسم المستخدم كإيميل وهمي
+    const fakeEmail = `${username.toLowerCase().replace(/\s+/g, '_')}@bukamel.app`;
+
+    const { data, error } = await supabase.auth.signUp({
+        email: fakeEmail,
+        password: pass1,
+    });
+
+    if (error) {
+        alert('خطأ في التسجيل: ' + error.message);
         return;
     }
 
-    db.users.push({
-        username: username,
-        pass: pass1,
-        data: {},
-        customHabits: JSON.parse(JSON.stringify(defaultHabits))
-    });
-    saveDatabase();
-    alert(`تم إنشاء الحساب بنجاح يا ${username}!`);
-    switchAuthView('login');
+    if (data.user) {
+        // حفظ اسم المستخدم في جدول profiles
+        await supabase.from('profiles').insert({
+            id: data.user.id,
+            username: username,
+            is_admin: false
+        });
+        
+        alert(`تم إنشاء الحساب بنجاح يا ${username}! يمكنك تسجيل الدخول الآن.`);
+        switchAuthView('login');
+    }
 }
 
-function handleLogin() {
+async function handleLogin() {
     const uInput = document.getElementById('loginUser').value.trim();
     const pInput = document.getElementById('loginPass').value;
 
-    const user = db.users.find(u => u.username === uInput && u.pass === pInput);
-    if (!user) {
+    if (!uInput || !pInput) {
+        alert('الرجاء إدخال اسم المستخدم وكلمة المرور!');
+        return;
+    }
+
+    const fakeEmail = `${uInput.toLowerCase().replace(/\s+/g, '_')}@bukamel.app`;
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email: fakeEmail,
+        password: pInput,
+    });
+
+    if (error) {
         alert('اسم المستخدم أو كلمة المرور غير صحيحة!');
         return;
     }
 
-    currentUser = user;
-    if (!currentUser.customHabits) {
-        currentUser.customHabits = JSON.parse(JSON.stringify(defaultHabits));
-    }
-    localStorage.setItem('bu_kamel_active_user', user.username);
-    initAppDashboard();
+    // الـ onAuthStateChange ستقوم بالباقي وتفتح لوحة التحكم تلقائياً
 }
 
-function logout() {
+async function logout() {
+    await supabase.auth.signOut();
     currentUser = null;
-    localStorage.removeItem('bu_kamel_active_user');
     document.getElementById('mainAppLayout').classList.add('hidden');
     document.getElementById('loginViewContainer').classList.remove('hidden');
 }
 
+// ================= واجهة التطبيق والتحكم =================
 function initAppDashboard() {
     document.getElementById('loginViewContainer').classList.add('hidden');
     document.getElementById('mainAppLayout').classList.remove('hidden');
-
     document.getElementById('userHeaderInfo').classList.remove('hidden');
-    document.getElementById('headerUsername').textContent = `مرحباً، ${currentUser.username}`;
+    document.getElementById('headerUsername').textContent = `مرحباً، ${currentUser.username || 'بطل'}`;
 
     renderYearsList();
     renderMonthsGrid();
@@ -312,46 +202,49 @@ function initAppDashboard() {
 function handleScopeChange(val) {
     const monthWrap = document.getElementById('scopeMonthWrapper');
     const quarterWrap = document.getElementById('scopeQuarterWrapper');
-    
     monthWrap.classList.add('hidden');
     quarterWrap.classList.add('hidden');
-
     if (val === 'month') monthWrap.classList.remove('hidden');
     else if (val === 'quarter') quarterWrap.classList.remove('hidden');
 }
 
-function addNewCustomHabit() {
+async function addNewCustomHabit() {
     const name = document.getElementById('newHabitName').value.trim();
     let icon = document.getElementById('newHabitIcon').value.trim() || '⭐';
-    const scopeType = document.getElementById('habitScopeType').value;
 
     if (!name) {
         alert('الرجاء كتابة اسم العادة!');
         return;
     }
 
-    let scopeVal = 'year';
-    if (scopeType === 'month') scopeVal = `month_${document.getElementById('habitTargetMonth').value}`;
-    else if (scopeType === 'quarter') scopeVal = document.getElementById('habitTargetQuarter').value;
+    const { data, error } = await supabase
+        .from('habits')
+        .insert({ user_id: currentUser.id, habit_name: name, habit_icon: icon })
+        .select()
+        .single();
+
+    if (error) {
+        alert('حدث خطأ أثناء إضافة العادة');
+        return;
+    }
 
     currentUser.customHabits.push({
-        id: 'habit_' + Date.now(),
-        name: name,
-        icon: icon,
-        scope: scopeVal
+        id: data.id,
+        name: data.habit_name,
+        icon: data.habit_icon,
+        scope: 'year'
     });
 
-    saveDatabase();
     document.getElementById('newHabitName').value = '';
     document.getElementById('newHabitIcon').value = '';
     renderAdminHabitsList();
     alert('تمت إضافة العادة بنجاح! 🎉');
 }
 
-function deleteHabit(habitId) {
+async function deleteHabit(habitId) {
     if (confirm('هل أنت متأكد من حذف هذه العادة؟')) {
+        await supabase.from('habits').delete().eq('id', habitId);
         currentUser.customHabits = currentUser.customHabits.filter(h => h.id !== habitId);
-        saveDatabase();
         renderAdminHabitsList();
         updateDashboardPerformance();
     }
@@ -363,21 +256,12 @@ function renderAdminHabitsList() {
     container.innerHTML = '';
 
     currentUser.customHabits.forEach(habit => {
-        let scopeDesc = 'طوال السنة';
-        if (habit.scope.startsWith('month_')) {
-            const mNames = ["يناير", "فبراير", "مارس", "إبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-            scopeDesc = `شهر ${mNames[parseInt(habit.scope.split('_')[1])]}`;
-        } else if (['Q1', 'Q2', 'Q3', 'Q4'].includes(habit.scope)) {
-            scopeDesc = `ربع سنة ${habit.scope}`;
-        }
-
         const row = document.createElement('div');
         row.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-glass); font-size: 0.9rem;";
         row.innerHTML = `
             <div style="display: flex; align-items: center; gap: 8px;">
                 <span>${habit.icon}</span>
                 <strong>${habit.name}</strong>
-                <span style="font-size: 0.75rem; color: var(--text-muted); background: var(--bg-card); padding: 2px 6px; border-radius: 4px;">(${scopeDesc})</span>
             </div>
             <button class="btn btn-danger btn-sm" onclick="deleteHabit('${habit.id}')" style="padding: 4px 10px; font-size: 0.8rem;">🗑 حذف</button>
         `;
@@ -386,17 +270,7 @@ function renderAdminHabitsList() {
 }
 
 function getActiveHabitsForCurrentMonth() {
-    return currentUser.customHabits.filter(habit => {
-        if (habit.scope === 'year') return true;
-        if (habit.scope.startsWith('month_')) {
-            return parseInt(habit.scope.split('_')[1]) === currentMonth;
-        }
-        if (['Q1', 'Q2', 'Q3', 'Q4'].includes(habit.scope)) {
-            const qMap = { 'Q1': [0, 1, 2], 'Q2': [3, 4, 5], 'Q3': [6, 7, 8], 'Q4': [9, 10, 11] };
-            return qMap[habit.scope].includes(currentMonth);
-        }
-        return true;
-    });
+    return currentUser.customHabits || [];
 }
 
 function renderYearsList() {
@@ -419,21 +293,11 @@ function renderYearsList() {
 }
 
 function addNewYear() {
-    const actualCurrentYear = new Date().getFullYear();
     const nextExpectedYear = Math.max(...availableYears) + 1;
-
-    if (actualCurrentYear < nextExpectedYear) {
-        alert(`لا يمكنك إضافة سنة ${nextExpectedYear} قبل حلولها.`);
-        return;
-    }
-
     if (!availableYears.includes(nextExpectedYear)) {
         availableYears.push(nextExpectedYear);
-        localStorage.setItem('bu_kamel_years', JSON.stringify(availableYears));
         renderYearsList();
         alert(`تم فتح عام ${nextExpectedYear} بنجاح! 🎉`);
-    } else {
-        alert('هذه السنة موجودة بالفعل.');
     }
 }
 
@@ -447,21 +311,13 @@ function openYear(year) {
 function renderMonthsGrid() {
     const months = ["يناير", "فبراير", "مارس", "إبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
     const grid = document.getElementById('monthsGrid');
+    if (!grid) return;
     grid.innerHTML = '';
-
-    const todayDate = new Date();
-    const isActualCurrentYear = (currentYear === todayDate.getFullYear());
-    const actualCurrentMonthIndex = todayDate.getMonth();
 
     months.forEach((mName, index) => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
-        if (isActualCurrentYear && index === actualCurrentMonthIndex) {
-            btn.classList.add('active');
-            btn.textContent = `⭐ شهر ${mName} (الحالي)`;
-        } else {
-            btn.textContent = `شهر ${mName}`;
-        }
+        btn.textContent = `شهر ${mName}`;
         btn.onclick = () => openMonth(index, mName);
         grid.appendChild(btn);
     });
@@ -470,16 +326,7 @@ function renderMonthsGrid() {
 function openMonth(monthIndex, monthName) {
     currentMonth = monthIndex;
     currentMonthName = monthName;
-
-    const today = new Date();
-    if (currentYear === today.getFullYear() && currentMonth === today.getMonth()) {
-        currentDayIndex = today.getDate() - 1;
-        const maxDays = new Date(currentYear, currentMonth + 1, 0).getDate();
-        if (currentDayIndex >= maxDays) currentDayIndex = maxDays - 1;
-        if (currentDayIndex < 0) currentDayIndex = 0;
-    } else {
-        currentDayIndex = 0;
-    }
+    currentDayIndex = 0;
 
     document.getElementById('mainDashboardView').classList.add('hidden');
     document.getElementById('fullMonthView').classList.add('hidden');
@@ -494,6 +341,7 @@ function openMonth(monthIndex, monthName) {
 
 function populateQuickDayDropdown() {
     const dropdown = document.getElementById('quickDayDropdown');
+    if (!dropdown) return;
     dropdown.innerHTML = '<option value="" disabled selected>-- اختر اليوم الانتقالي --</option>';
     
     const daysCount = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -521,26 +369,32 @@ function changeDay(direction) {
     renderDayHabits();
 }
 
+function getLogStatus(habitId, dayIndex) {
+    const targetDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayIndex + 1).padStart(2, '0')}`;
+    if (!currentUser.logsData) return 'none';
+    const log = currentUser.logsData.find(l => l.habit_id == habitId && l.log_date === targetDate);
+    return log ? log.status : 'none';
+}
+
 function renderDayHabits() {
     const dayNumber = currentDayIndex + 1;
     document.getElementById('activeDayTitle').textContent = `اليوم رقم ${dayNumber} من شهر ${currentMonthName}`;
     
     const container = document.getElementById('habitsListContainer');
+    if (!container) return;
     container.innerHTML = '';
 
     const activeHabits = getActiveHabitsForCurrentMonth();
     if (activeHabits.length === 0) {
-        container.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 20px;">لا توجد عادات مخصصة لهذا الشهر.</p>`;
+        container.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 20px;">لا توجد عادات مسجلة.</p>`;
         return;
     }
 
     activeHabits.forEach(habit => {
-        const key = `${currentYear}_${currentMonth}_${currentDayIndex}_${habit.id}`;
-        const currentStatus = currentUser.data[key] || 'none';
+        const currentStatus = getLogStatus(habit.id, currentDayIndex);
 
         const row = document.createElement('div');
         row.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-glass); gap: 10px;";
-
         row.innerHTML = `
             <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.9rem;">
                 <span>${habit.icon}</span>
@@ -554,15 +408,21 @@ function renderDayHabits() {
         `;
         container.appendChild(row);
     });
-
-    const dropdown = document.getElementById('quickDayDropdown');
-    if (dropdown) dropdown.value = currentDayIndex;
 }
 
-function updateHabitStatus(habitId, status) {
-    const key = `${currentYear}_${currentMonth}_${currentDayIndex}_${habitId}`;
-    currentUser.data[key] = status;
-    saveDatabase();
+async function updateHabitStatus(habitId, status) {
+    const targetDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(currentDayIndex + 1).padStart(2, '0')}`;
+    
+    // تحديث محلياً لتسريع الواجهة
+    if (!currentUser.logsData) currentUser.logsData = [];
+    const existingLog = currentUser.logsData.find(l => l.habit_id == habitId && l.log_date === targetDate);
+    if (existingLog) {
+        existingLog.status = status;
+    } else {
+        currentUser.logsData.push({ habit_id: habitId, log_date: targetDate, status: status });
+    }
+
+    await toggleHabitLogSupabase(habitId, targetDate, status);
 
     if (status === 'done') playSound('success');
     else if (status === 'super') playSound('super');
@@ -581,7 +441,7 @@ function goHome() {
 }
 
 function updateDashboardPerformance() {
-    if (!currentUser) return;
+    if (!currentUser || !currentUser.customHabits) return;
     const daysCount = new Date(currentYear, currentMonth + 1, 0).getDate();
     const activeHabits = getActiveHabitsForCurrentMonth();
     let totalPossible = daysCount * activeHabits.length;
@@ -589,8 +449,7 @@ function updateDashboardPerformance() {
 
     for (let d = 0; d < daysCount; d++) {
         activeHabits.forEach(habit => {
-            const key = `${currentYear}_${currentMonth}_${d}_${habit.id}`;
-            const status = currentUser.data[key];
+            const status = getLogStatus(habit.id, d);
             if (status === 'done') earnedPoints += 1;
             else if (status === 'super') earnedPoints += 1.25;
         });
@@ -607,6 +466,7 @@ function openFullMonthView() {
     document.getElementById('fullMonthHeaderTitle').textContent = `تعديل شهر ${currentMonthName} كاملاً (${currentYear})`;
 
     const container = document.getElementById('fullMonthContentContainer');
+    if (!container) return;
     container.innerHTML = '';
 
     const activeHabits = getActiveHabitsForCurrentMonth();
@@ -619,8 +479,7 @@ function openFullMonthView() {
         let html = `<div style="font-weight: 700; margin-bottom: 8px; color: var(--accent-color);">📅 اليوم رقم ${d + 1}</div><div style="display: flex; flex-direction: column; gap: 6px;">`;
 
         activeHabits.forEach(habit => {
-            const key = `${currentYear}_${currentMonth}_${d}_${habit.id}`;
-            const status = currentUser.data[key] || 'none';
+            const status = getLogStatus(habit.id, d);
             html += `
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; gap: 10px;">
                     <span>${habit.icon} ${habit.name}</span>
@@ -638,52 +497,35 @@ function openFullMonthView() {
     }
 }
 
-function updateFullMonthHabit(dayIdx, habitId, status) {
-    const key = `${currentYear}_${currentMonth}_${dayIdx}_${habitId}`;
-    currentUser.data[key] = status;
-    saveDatabase();
+async function updateFullMonthHabit(dayIdx, habitId, status) {
+    const targetDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayIdx + 1).padStart(2, '0')}`;
+    
+    if (!currentUser.logsData) currentUser.logsData = [];
+    const existingLog = currentUser.logsData.find(l => l.habit_id == habitId && l.log_date === targetDate);
+    if (existingLog) {
+        existingLog.status = status;
+    } else {
+        currentUser.logsData.push({ habit_id: habitId, log_date: targetDate, status: status });
+    }
+
+    await toggleHabitLogSupabase(habitId, targetDate, status);
+
     if (status === 'done') playSound('success');
     else if (status === 'super') playSound('super');
     else playSound('clear');
 }
 
-// ================= مولد الرسائل الذكية والمتنوعة حسب النسبة ونوع التقرير =================
 function getSmartEvaluationMessage(type, ratio, name) {
     if (ratio > 90) {
-        if (type === 'month') {
-            return `إنجاز أسطوري في شهر <strong>${name}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 👑🔥\n\nيا سلام عليك يا بطل! أنت كدة "تروّق" على أصولها.. التزام حديدي وعزيمة لا تذبل، استمر في هذا المستوى المرعب من الانضباط!`;
-        } else if (type === 'quarter') {
-            return `ملحمة نجاح كبرى في <strong>${name}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 🚀🏆\n\nأداء فلكي يستحق الفخر والترويقة الصح. لقد حطمت التوقعات وأثبتّ أن الاستمرارية تصنع المعجزات!`;
-        } else {
-            return `التقرير السنوي الأسطوري لعام <strong>${currentYear}</strong> بنسبة إنجاز <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 🌟👑\n\nسنة كاملة من المجد والالتزام الخارق! لقد أبدعت حقاً وصنعت مستقبلاً عظيماً، استمتع بثمرة هذا العطاء الضخم!`;
-        }
+        return `إنجاز أسطوري في <strong>${name}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 👑🔥\n\nأداء استثنائي وعزيمة حديدية!`;
     } else if (ratio >= 75) {
-        if (type === 'month') {
-            return `أداء ممتاز ومبهر لشهر <strong>${name}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>! 💪✨\n\nأنت في منطقة الأبطال! دفعة صغيرة وتصل للقمة المطلقة، واصل هذا السير الثابت ولا تتراجع أبداً!`;
-        } else if (type === 'quarter') {
-            return `نتيجة رائعة جداً لـ <strong>${name}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>! 🎯🔥\n\nخطواتك ثابتة ومدروسة نحو أهدافك الكبرى، شد حيلك أكثر لتلامس الـ 90% فأنت لها!`;
-        } else {
-            return `حصاد سنوي مشرف جداً لعام <strong>${currentYear}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>! 📈🌟\n\nعام مليء بالإنجازات والتقدم الحقيقي، أنت تسير بخطى واثقة نحو نسخة أفضل منك دائماً!`;
-        }
+        return `أداء ممتاز ومبهر لـ <strong>${name}</strong> بنسبة <span style="color: var(--success-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>! 💪✨`;
     } else if (ratio >= 45) {
-        if (type === 'month') {
-            return `أداء مقبول لشهر <strong>${name}</strong> بنسبة <span style="color: var(--accent-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>. ☕⚠️\n\nبداية جيدة لكنها لا تليق بطموحاتك! عندك طاقة أكبر بكتير، نظم وقتك وشد الهمة في الشاي القادم!`;
-        } else if (type === 'quarter') {
-            return `تقييم <strong>${name}</strong> سجل نسبة <span style="color: var(--accent-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>. 📊💡\n\nالنتيجة متوسطة وفيها مكان كبير للتحسين. حان الوقت لمراجعة الأولويات وإشعال الحماس من جديد!`;
-        } else {
-            return `التقرير السنوي لعام <strong>${currentYear}</strong> بلغ <span style="color: var(--accent-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>. 📉⚖️\n\nسنة فيها وعليها.. أظهرت التزاماً في أوقات وتراجعاً في أوقات أخرى. القادم يحتاج تركيزاً أعمق!`;
-        }
+        return `أداء مقبول لـ <strong>${name}</strong> بنسبة <span style="color: var(--accent-color); font-size: 1.4rem; font-weight: 900;">${ratio}%</span>. ☕⚠️`;
     } else {
-        if (type === 'month') {
-            return `أنا زعلان منك بصراحة! نسبة إنجاز شهر <strong>${name}</strong> نزلت إلى <span style="color: var(--danger-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 🛑❌\n\nفين العزيمة؟ فين التخطي والالتزام؟ عاداتك الرائعة تنتظرك، استيقظ وفض الغبار عن همتك لأنك تقدر تعمل أفضل من كده بكتير!`;
-        } else if (type === 'quarter') {
-            return `تنبيه جاد وصارم لتقييم <strong>${name}</strong>.. النسبة وصلت إلى <span style="color: var(--danger-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! ⚠️📉\n\nالكلام ده ماينفعش يا بطل! الوقت يمر والتراكمات تكبر، زعلنا اليوم هو بداية انطلاقة قوية بكرة، اعد ترتيب الأوراق فوراً!`;
-        } else {
-            return `جرس إنذار سنوي لعام <strong>${currentYear}</strong> بمعدل <span style="color: var(--danger-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 🛑⚡\n\nالسنة دي راحت في التهاون، وده مايشبهش طموحاتك أبداً. اجمع نفسك الآن واجعل القادم نقطة تحول تاريخية لك!`;
-        }
+        return `نسبة الإنجاز في <strong>${name}</strong> وصلت إلى <span style="color: var(--danger-color); font-size: 1.5rem; font-weight: 900;">${ratio}%</span>! 🛑❌\n\nشد الهمة واستعد للانطلاق من جديد!`;
     }
 }
-// ==================================================================================
 
 function openQuarterEvaluation(title, monthsArray) {
     document.getElementById('mainDashboardView').classList.add('hidden');
@@ -700,23 +542,12 @@ function openQuarterEvaluation(title, monthsArray) {
     monthsArray.forEach(mIdx => {
         const mAdjusted = mIdx - 1;
         const daysCount = new Date(currentYear, mAdjusted + 1, 0).getDate();
-        
-        const monthActiveHabits = currentUser.customHabits.filter(habit => {
-            if (habit.scope === 'year') return true;
-            if (habit.scope.startsWith('month_')) return parseInt(habit.scope.split('_')[1]) === mAdjusted;
-            if (['Q1', 'Q2', 'Q3', 'Q4'].includes(habit.scope)) {
-                const qMap = { 'Q1': [0, 1, 2], 'Q2': [3, 4, 5], 'Q3': [6, 7, 8], 'Q4': [9, 10, 11] };
-                return qMap[habit.scope].includes(mAdjusted);
-            }
-            return true;
-        });
-
-        totalPossible += daysCount * monthActiveHabits.length;
+        const activeHabits = getActiveHabitsForCurrentMonth();
+        totalPossible += daysCount * activeHabits.length;
 
         for (let d = 0; d < daysCount; d++) {
-            monthActiveHabits.forEach(habit => {
-                const key = `${currentYear}_${mAdjusted}_${d}_${habit.id}`;
-                const status = currentUser.data[key];
+            activeHabits.forEach(habit => {
+                const status = getLogStatus(habit.id, d);
                 if (status === 'done') earnedPoints += 1;
                 else if (status === 'super') earnedPoints += 1.25;
             });
@@ -741,22 +572,15 @@ function openAnnualEvaluation() {
 
     for (let m = 0; m < 12; m++) {
         const daysCount = new Date(currentYear, m + 1, 0).getDate();
-        const monthActiveHabits = currentUser.customHabits.filter(habit => {
-            if (habit.scope === 'year') return true;
-            if (habit.scope.startsWith('month_')) return parseInt(habit.scope.split('_')[1]) === m;
-            if (['Q1', 'Q2', 'Q3', 'Q4'].includes(habit.scope)) {
-                const qMap = { 'Q1': [0, 1, 2], 'Q2': [3, 4, 5], 'Q3': [6, 7, 8], 'Q4': [9, 10, 11] };
-                return qMap[habit.scope].includes(m);
-            }
-            return true;
-        });
-
-        totalPossible += daysCount * monthActiveHabits.length;
+        const activeHabits = getActiveHabitsForCurrentMonth();
+        totalPossible += daysCount * activeHabits.length;
 
         for (let d = 0; d < daysCount; d++) {
-            monthActiveHabits.forEach(habit => {
-                const key = `${currentYear}_${m}_${d}_${habit.id}`;
-                const status = currentUser.data[key];
+            activeHabits.forEach(habit => {
+                const targetDate = `${currentYear}-${String(m + 1).padStart(2, '0')}-${String(d + 1).padStart(2, '0')}`;
+                const log = currentUser.logsData && currentUser.logsData.find(l => l.habit_id == habit.id && l.log_date === targetDate);
+                const status = log ? log.status : 'none';
+
                 if (status === 'done') earnedPoints += 1;
                 else if (status === 'super') earnedPoints += 1.25;
             });
@@ -781,8 +605,7 @@ function closeMonthReport() {
 
     for (let d = 0; d < daysCount; d++) {
         activeHabits.forEach(habit => {
-            const key = `${currentYear}_${currentMonth}_${d}_${habit.id}`;
-            const status = currentUser.data[key];
+            const status = getLogStatus(habit.id, d);
             if (status === 'done') earnedPoints += 1;
             else if (status === 'super') earnedPoints += 1.25;
         });
@@ -792,15 +615,45 @@ function closeMonthReport() {
     document.getElementById('evalContentBox').innerHTML = getSmartEvaluationMessage('month', ratio, currentMonthName);
 }
 
-// --- ربط الدوال بالنطاق العام لتعمل الأزرار مع الـ ES Module ---
-window.toggleTheme = toggleTheme;
-window.toggleTranslateMenu = toggleTranslateMenu;
-window.filterLanguages = filterLanguages;
-window.switchAuthView = switchAuthView;
+function switchAuthView(viewType) {
+    if (viewType === 'register') {
+        document.getElementById('loginView').classList.add('hidden');
+        document.getElementById('registerView').classList.remove('hidden');
+    } else {
+        document.getElementById('registerView').classList.add('hidden');
+        document.getElementById('loginView').classList.remove('hidden');
+    }
+}
+
+function playSound(type) {
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        if (type === 'success') {
+            osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        }
+    } catch (e) {}
+}
+
+function toggleTheme() {
+    const htmlRoot = document.getElementById('htmlRoot');
+    if (htmlRoot.getAttribute('data-theme') === 'dark') {
+        htmlRoot.removeAttribute('data-theme');
+    } else {
+        htmlRoot.setAttribute('data-theme', 'dark');
+    }
+}
+
+// ربط الدوال بالنافذة العامة لتتفاعل مع أزرار HTML
 window.handleRegister = handleRegister;
 window.handleLogin = handleLogin;
 window.logout = logout;
-window.handleScopeChange = handleScopeChange;
+window.switchAuthView = switchAuthView;
 window.addNewCustomHabit = addNewCustomHabit;
 window.deleteHabit = deleteHabit;
 window.addNewYear = addNewYear;
@@ -815,3 +668,4 @@ window.updateFullMonthHabit = updateFullMonthHabit;
 window.openQuarterEvaluation = openQuarterEvaluation;
 window.openAnnualEvaluation = openAnnualEvaluation;
 window.closeMonthReport = closeMonthReport;
+window.toggleTheme = toggleTheme;
