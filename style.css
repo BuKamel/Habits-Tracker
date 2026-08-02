@@ -43,7 +43,6 @@ body {
     display: none !important;
 }
 
-/* الشريط العلوي المرن والمتجاوب */
 .header-bar {
     position: sticky;
     top: 0;
@@ -82,7 +81,6 @@ body {
     gap: 6px;
 }
 
-/* قائمة وبحث الترجمة الزجاجية */
 .google-translate-wrapper {
     position: relative;
     display: inline-block;
@@ -110,7 +108,6 @@ body {
     background: rgba(111, 78, 55, 0.08);
 }
 
-/* القائمة المنسدلة للبحث تتكيف مع شاشات الهاتف وتمنع الخروج عن الشاشة */
 .translate-dropdown-menu {
     position: absolute;
     top: calc(100% + 8px);
@@ -170,7 +167,6 @@ body {
     color: #fff;
 }
 
-/* شريط اليوتيوب */
 .channel-bar {
     background: var(--accent-color);
     color: #fff;
@@ -190,7 +186,6 @@ body {
     font-weight: 700;
 }
 
-/* شريط التحفيز */
 .motivation-banner {
     background: var(--bg-card);
     backdrop-filter: blur(10px);
@@ -202,7 +197,6 @@ body {
     font-weight: 700;
 }
 
-/* تسجيل الدخول */
 .auth-wrapper {
     display: flex;
     justify-content: center;
@@ -253,7 +247,6 @@ body {
     box-shadow: 0 0 0 3px rgba(111, 78, 55, 0.12);
 }
 
-/* تخطيط التطبيق الرئيسي */
 .main-layout {
     display: grid;
     grid-template-columns: 240px 1fr;
@@ -508,7 +501,6 @@ body {
     text-decoration: none;
 }
 
-/* التجاوب مع الهواتف والشاشات الصغيرة بدقة عالية */
 @media screen and (max-width: 768px) {
     .main-layout {
         grid-template-columns: 1fr;
@@ -547,12 +539,10 @@ body {
     }
 }
 
-/* إلغاء شريط جوجل المزعج العلوي */
 .goog-te-banner-frame.skiptranslate { display: none !important; }
 body { top: 0px !important; }
 .goog-te-gadget { font-size: 0px !important; }
 
-/* تنسيق الجملة التعريفية (App Tagline) */
 .app-tagline {
     font-size: 0.95rem;
     color: #64748b;
